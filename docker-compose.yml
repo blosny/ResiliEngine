@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  # Veritabanı Servisi
+  db:
+    image: postgres:15
+    container_name: resiliengine_db
+    restart: always
+    environment:
+      POSTGRES_USER: resiliengine_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password123}
+      POSTGRES_DB: resiliengine_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Yusuf Arda'nın NestJS Backend Servisi
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: resiliengine_backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://resiliengine_user:${DB_PASSWORD:-password123}@db:5432/resiliengine_db
+
+  # Tunahan'ın Python AI Servisi
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: resiliengine_ai
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+volumes:
+  postgres_data:
