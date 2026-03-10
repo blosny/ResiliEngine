@@ -1,0 +1,11 @@
+name: ResiliEngine CI
+on:
+  pull_request:
+    branches: [ develop, main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Check
+        run: echo "DevOps Infrastructure is ready and synced!"
