@@ -20,10 +20,10 @@ import { UserController } from './presentation/controllers/user.controller';
     // Veritabanı Bağlantısı (Taha'nın Docker ayarlarıyla uyumlu)
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost', // Docker konteynırı dışında çalışırken localhost, içinde 'db' olur
+      host: process.env.DB_HOST || 'db',
       port: 5432,
       username: 'resiliengine_user',
-      password: 'password123',
+      password: process.env.DB_PASSWORD || 'password123',
       database: 'resiliengine_db',
       entities: [User],
       synchronize: true, // Geliştirme aşamasında tabloları otomatik oluşturur (PDF Madde 2 - Migration uyarısına dikkat, ileride kapatacağız)

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # Veritabanı Servisi
   db:
@@ -26,6 +24,9 @@ services:
     depends_on:
       - db
     environment:
+      # Koda "db" ismine gitmesini söylüyoruz
+      DB_HOST: db
+      DB_PASSWORD: ${DB_PASSWORD:-password123}
       DATABASE_URL: postgres://resiliengine_user:${DB_PASSWORD:-password123}@db:5432/resiliengine_db
 
   # Tunahan'ın Python AI Servisi
@@ -37,7 +38,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      # Senin .env dosyasındaki isme (GEMINI_API_KEY) göre güncelledim
+      API_KEY: ${GEMINI_API_KEY}
 
 volumes:
   postgres_data:
