@@ -1,4 +1,4 @@
 export interface IChaosStrategy {
   name: string;
-  execute(): Promise<void>;
+  execute(config?: any): Promise<void>;
 }
