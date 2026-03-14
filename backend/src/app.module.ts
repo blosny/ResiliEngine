@@ -1,52 +1,36 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { APP_INTERCEPTOR } from '@nestjs/core'; // Global interceptor için şart
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-
-// 1. Entity (Tablo) Import
-import { User } from './domain/entities/user.entity';
-
-// 2. Repository (Veri Erişimi) Import
-import { UserRepository } from './infrastructure/repositories/user.repository';
-
-// 3. Service (İş Mantığı) Importlar
-import { UserService } from './application/services/user.service';
+import { HttpModule } from '@nestjs/axios';
+import { ChaosLog } from './domain/entities/chaos-log.entity';
 import { ChaosEngineService } from './application/services/chaos-engine.service';
-
-// 4. Controller (API Uçları) Importlar
-import { UserController } from './presentation/controllers/user.controller';
-
-// 5. Interceptor (Kaos Tetikleyici) Import
-import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor';
+import { TypeOrmChaosRepository } from './infrastructure/repositories/chaos.repository';
+import { AiServiceClient } from './infrastructure/external/ai-service.client';
+import { LatencyStrategy } from './infrastructure/strategies/latency.strategy';
+import { Error500Strategy } from './infrastructure/strategies/error500.strategy';
+import { ChaosController } from './presentation/controllers/chaos.controller';
 
 @Module({
   imports: [
-    // Veritabanı Yapılandırması (Taha'nın Docker ayarlarıyla uyumlu)
+    HttpModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'db', // Docker'da 'db', yerelde 'localhost'
+      host: process.env.DB_HOST || 'db',
       port: 5432,
       username: 'resiliengine_user',
-      password: process.env.DB_PASSWORD || 'password123',
+      password: 'password123',
       database: 'resiliengine_db',
-      entities: [User],
-      synchronize: true, // Geliştirme aşamasında tabloları otomatik oluşturur
+      entities: [ChaosLog],
+      synchronize: true,
     }),
-    // User tablosunu modüle tanıtıyoruz
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([ChaosLog]),
   ],
-  controllers: [AppController, UserController],
+  controllers: [ChaosController],
   providers: [
-    AppService,
-    UserService,
-    UserRepository,
-    ChaosEngineService, // Kaos motorunu servis olarak ekledik
-    {
-      // BU KISIM ÇOK KRİTİK: Kaos Interceptor'ı tüm uygulamada aktif eder
-      provide: APP_INTERCEPTOR,
-      useClass: ChaosInterceptor,
-    },
+    ChaosEngineService,
+    AiServiceClient,
+    LatencyStrategy,
+    Error500Strategy,
+    { provide: 'IChaosRepository', useClass: TypeOrmChaosRepository }, // KRİTİK: Interface Mapping
   ],
 })
 export class AppModule {}
