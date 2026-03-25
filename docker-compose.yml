@@ -38,8 +38,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Senin .env dosyasındaki isme (GEMINI_API_KEY) göre güncelledim
-      API_KEY: ${GEMINI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
 
 volumes:
   postgres_data:

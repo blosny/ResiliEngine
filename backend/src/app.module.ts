@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { HttpModule } from '@nestjs/axios'; // SCRUM-11: AI Entegrasyonu için şart
-import { APP_INTERCEPTOR } from '@nestjs/core'; // Global Interceptor için şart
+import { HttpModule } from '@nestjs/axios';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 // Kontrolcüler (Presentation Layer)
 import { AppController } from './app.controller';
@@ -29,10 +29,7 @@ import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor'
 
 @Module({
   imports: [
-    // SCRUM-11: Tunahan'ın AI servisine istek atabilmek için gerekli modül
     HttpModule,
-
-    // Veritabanı Yapılandırması (Taha'nın Docker ayarlarıyla %100 uyumlu)
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'db',
@@ -40,30 +37,19 @@ import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor'
       username: process.env.DB_USER || 'resiliengine_user',
       password: process.env.DB_PASSWORD || 'password123',
       database: process.env.DB_NAME || 'resiliengine_db',
-      entities: [User, ChaosLog], // ChaosLog eklendi (Stage 4 History için)
-      synchronize: true, // Geliştirme aşamasında true kalsın
+      entities: [User, ChaosLog],
+      synchronize: true,
     }),
-
-    // Entity'leri modüle tanıtıyoruz
     TypeOrmModule.forFeature([User, ChaosLog]),
   ],
-  controllers: [
-    AppController,
-    UserController,
-    ChaosController, // Chaos History ve Trigger endpointleri burada
-  ],
+  controllers: [AppController, UserController, ChaosController],
   providers: [
     AppService,
     UserService,
     ChaosEngineService,
     AiServiceClient,
-
-    // STRATEGY PATTERN: Stratejileri Dependency Injection (DI) için kaydediyoruz
     LatencyStrategy,
     Error500Strategy,
-
-    // REPOSITORY PATTERN (Hocanın PDF Madde 2 kuralı):
-    // Servislerde interface kullanıp, burada gerçek sınıfı bağlıyoruz.
     {
       provide: 'IUserRepository',
       useClass: TypeOrmUserRepository,
@@ -72,8 +58,6 @@ import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor'
       provide: 'IChaosRepository',
       useClass: TypeOrmChaosRepository,
     },
-
-    // CHAOS INTERCEPTOR: Kaos etkilerini tüm sistemde otomatik aktif eder
     {
       provide: APP_INTERCEPTOR,
       useClass: ChaosInterceptor,
