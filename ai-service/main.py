@@ -20,10 +20,6 @@ if not api_key:
 # Gemini client
 client = genai.Client(api_key=api_key)
 
-print("--- API Anahtarının Desteklediği Modeller ---")
-for m in client.models.list():
-    print(m.name)
-print("---------------------------------------------")
 
 
 class LogRequest(BaseModel):
