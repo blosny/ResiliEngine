@@ -14,13 +14,12 @@ import { ChaosController } from './presentation/controllers/chaos.controller';
     HttpModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'db',
-      port: 5432,
-      username: 'resiliengine_user',
-      password: 'password123',
-      database: 'resiliengine_db',
+      url:
+        process.env.DATABASE_URL ||
+        'postgresql://resiliengine_user:password123@db:5432/resiliengine_db',
       entities: [ChaosLog],
       synchronize: true,
+      ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
     }),
     TypeOrmModule.forFeature([ChaosLog]),
   ],
@@ -30,7 +29,10 @@ import { ChaosController } from './presentation/controllers/chaos.controller';
     AiServiceClient,
     LatencyStrategy,
     Error500Strategy,
-    { provide: 'IChaosRepository', useClass: TypeOrmChaosRepository }, // KRİTİK: Interface Mapping
+    {
+      provide: 'IChaosRepository',
+      useClass: TypeOrmChaosRepository,
+    },
   ],
 })
 export class AppModule {}
