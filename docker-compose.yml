@@ -29,7 +29,6 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-password123}
       DATABASE_URL: postgres://resiliengine_user:${DB_PASSWORD:-password123}@db:5432/resiliengine_db
 
-  # Tunahan'ın Python AI Servisi
   ai-service:
     build:
       context: ./ai-service
@@ -39,6 +38,16 @@ services:
       - "8000:8000"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+
+  frontend:
+    build: ./frontend
+    container_name: resiliengine_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=https://resiliengine-backend.onrender.com
 
 volumes:
   postgres_data:

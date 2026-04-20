@@ -11,7 +11,8 @@ export class ChaosEngineService {
 
   constructor(
     // Token olarak 'IChaosRepository' kullanmaya devam ediyoruz, tip olarak interface
-    @Inject('IChaosRepository') private readonly chaosRepository: IChaosRepository,
+    @Inject('IChaosRepository')
+    private readonly chaosRepository: IChaosRepository,
     private readonly aiClient: AiServiceClient,
   ) {}
 
@@ -20,7 +21,8 @@ export class ChaosEngineService {
   }
 
   async run(config: { target: string; params?: any }) {
-    if (!this.strategy) return { success: false, message: 'No strategy selected' };
+    if (!this.strategy)
+      return { success: false, message: 'No strategy selected' };
 
     const startTime = Date.now();
     let status = 'SUCCESS';
@@ -28,7 +30,7 @@ export class ChaosEngineService {
 
     try {
       await this.strategy.execute(config.params);
-    } catch (err: unknown) { 
+    } catch (err: unknown) {
       // HATA 2 ÇÖZÜMÜ: 'err' unknown olduğu için tip kontrolü yapıyoruz (TS18046)
       status = 'FAILED';
       if (err instanceof Error) {
@@ -39,7 +41,7 @@ export class ChaosEngineService {
       throw err;
     } finally {
       const duration = Date.now() - startTime;
-      
+
       try {
         const log = await this.chaosRepository.createLog({
           type: this.strategy.name,
@@ -53,10 +55,13 @@ export class ChaosEngineService {
           experimentId: log.id,
           type: log.type,
           status: log.status,
-          metrics: { duration }
+          metrics: { duration },
         });
       } catch (logErr) {
-        this.logger.error('Logging or AI delivery failed', logErr instanceof Error ? logErr.message : String(logErr));
+        this.logger.error(
+          'Logging or AI delivery failed',
+          logErr instanceof Error ? logErr.message : String(logErr),
+        );
       }
     }
   }
