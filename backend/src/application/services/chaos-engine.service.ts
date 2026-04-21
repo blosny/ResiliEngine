@@ -51,12 +51,15 @@ export class ChaosEngineService {
           errorDetails,
         });
 
-        await this.aiClient.sendLogForAnalysis({
-          experimentId: log.id,
-          type: log.type,
-          status: log.status,
-          metrics: { duration },
+        const aiResponse = await this.aiClient.sendLogForAnalysis({
+          log_content: `Hata Türü: ${log.type}, Hedef: ${log.target}, Durum: ${log.status}, Mesaj: ${log.errorDetails || 'Yok'}`
         });
+
+        if (aiResponse && aiResponse.recommendation) {
+           await this.chaosRepository.updateLog(log.id, {
+             aiRecommendation: aiResponse.recommendation
+           });
+        }
       } catch (logErr) {
         this.logger.error(
           'Logging or AI delivery failed',

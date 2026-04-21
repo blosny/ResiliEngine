@@ -19,4 +19,9 @@ export class TypeOrmChaosRepository implements IChaosRepository {
   async findAll(): Promise<ChaosLog[]> {
     return await this.repository.find({ order: { timestamp: 'DESC' } });
   }
+
+  async updateLog(id: string, data: Partial<ChaosLog>): Promise<ChaosLog> {
+    await this.repository.update(id, data);
+    return (await this.repository.findOne({ where: { id } })) as ChaosLog;
+  }
 }

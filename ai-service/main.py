@@ -56,7 +56,7 @@ Yanıtı SADECE şu JSON formatında ver:
 
     try:
         response = client.models.generate_content(
-            model="models/gemini-flash-latest", 
+            model="gemini-1.5-flash", 
             contents=prompt
         )
 

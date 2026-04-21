@@ -25,6 +25,9 @@ export class ChaosLog {
   @Column({ type: 'text', nullable: true }) // nullable: true olduğundan emin ol
   errorDetails?: string;
 
+  @Column({ type: 'text', nullable: true })
+  aiRecommendation?: string;
+
   @CreateDateColumn()
   timestamp: Date;
 }
