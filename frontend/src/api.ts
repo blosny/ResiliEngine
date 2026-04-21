@@ -1,10 +1,12 @@
 import axios from 'axios';
 
-// VITE_API_URL değişkenini Docker veya Render'dan alır
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const api = axios.create({
   baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  }
 });
 
 export const triggerChaos = async (type: 'latency' | 'error500') => {
