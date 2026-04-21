@@ -5,5 +5,8 @@
     "axios": "^1.13.6",
     "pg": "^8.20.0",
     "typeorm": "^0.3.28"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
   }
 }
