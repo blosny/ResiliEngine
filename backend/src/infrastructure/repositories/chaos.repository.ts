@@ -24,4 +24,8 @@ export class TypeOrmChaosRepository implements IChaosRepository {
     await this.repository.update(id, data);
     return (await this.repository.findOne({ where: { id } })) as ChaosLog;
   }
+
+  async clearLogs(): Promise<void> {
+    await this.repository.clear();
+  }
 }

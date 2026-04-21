@@ -59,6 +59,14 @@ export class ChaosEngineService {
            await this.chaosRepository.updateLog(log.id, {
              aiRecommendation: aiResponse.recommendation
            });
+        } else if (aiResponse && aiResponse.error) {
+           await this.chaosRepository.updateLog(log.id, {
+             aiRecommendation: `[HATA] ${aiResponse.error}`
+           });
+        } else {
+           await this.chaosRepository.updateLog(log.id, {
+             aiRecommendation: `[BİLGİ] AI Analizi tamamlanamadı (Servise ulaşılamadı).`
+           });
         }
       } catch (logErr) {
         this.logger.error(

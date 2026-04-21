@@ -18,3 +18,8 @@ export const getHistory = async () => {
   const response = await api.get('/chaos/history');
   return response.data;
 };
+
+export const clearHistory = async () => {
+  const response = await api.get('/chaos/history/clear');
+  return response.data;
+};

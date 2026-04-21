@@ -36,4 +36,10 @@ export class ChaosController {
       params: body.params,
     });
   }
+
+  @Get('history/clear')
+  async clearHistoryMethodFallback() {
+    await this.chaosRepository.clearLogs();
+    return { success: true };
+  }
 }

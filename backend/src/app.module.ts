@@ -19,7 +19,7 @@ import { ChaosController } from './presentation/controllers/chaos.controller';
         'postgresql://resiliengine_user:password123@db:5432/resiliengine_db',
       entities: [ChaosLog],
       synchronize: true,
-      ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+      ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('onrender') ? { rejectUnauthorized: false } : false,
     }),
     TypeOrmModule.forFeature([ChaosLog]),
   ],

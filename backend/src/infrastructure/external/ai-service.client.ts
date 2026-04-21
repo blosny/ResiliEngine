@@ -23,12 +23,13 @@ export class AiServiceClient {
       );
       return response.data;
     } catch (error) {
-      // Hata durumunda log bas ki Taha Docker loglarında sorunu görebilsin
-      const err = error as Error;
+      // Hata durumunda net log ve geriye detay dönme
+      const err = error as any;
+      const detail = err.response?.data?.detail || err.message;
       this.logger.error(
-        `AI Servisine ulaşılamadı (${this.AI_URL}): ${err.message}`,
+        `AI Servisine ulaşılamadı veya hata verdi (${this.AI_URL}): ${detail}`,
       );
-      return null;
+      return { recommendation: null, error: `AI Servisi Hatası: ${detail}` };
     }
   }
 }
