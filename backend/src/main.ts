@@ -14,6 +14,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:5173', // Yerel Frontend (Vite default)
       'https://resiliengine-dashboard.onrender.com', // Taha'nın Dashboard adresi
+      'https://resiliengine-frontend.onrender.com',  // Asıl Frontend adresi
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,

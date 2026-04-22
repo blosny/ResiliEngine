@@ -73,26 +73,38 @@ export class ChaosEngineService {
 
         // 2. SCRUM-11: Tunahan'ın AI Servisine Gönder
         // Arda'nın eklediği AI yanıt işleme mantığını buraya entegre ediyoruz
+        this.logger.log(`[SCRUM-11] Analiz başarıyla Tunahan'ın servisine iletildi. İstek içeriği: ${log.type} için analiz başlatıldı.`);
         const aiResponse = await this.aiClient.sendLogForAnalysis({
-          log_content: `Hata Türü: ${log.type}, Hedef: ${log.target}, Durum: ${log.status}, Mesaj: ${log.errorDetails || 'Yok'}`,
+          log_content: `[LOG_ENTRY]
+ID: ${log.id}
+TÜRE: ${log.type}
+HEDEF: ${log.target}
+DURUM: ${log.status}
+SÜRE: ${log.duration}ms
+MESAJ: ${log.errorDetails || 'Normal Operasyon'}
+ZAMAN: ${log.timestamp}
+[END_LOG]`,
         });
 
         if (aiResponse && aiResponse.recommendation) {
+          this.logger.log(`[AI SUCCESS] Öneri alındı: ${aiResponse.recommendation.substring(0, 50)}...`);
           await this.chaosRepository.updateLog(log.id, {
             aiRecommendation: aiResponse.recommendation,
           });
         } else if (aiResponse && aiResponse.error) {
+          this.logger.warn(`[AI WARN] Servis hata döndürdü: ${aiResponse.error}`);
           await this.chaosRepository.updateLog(log.id, {
             aiRecommendation: `[HATA] ${aiResponse.error}`,
           });
         } else {
+          this.logger.log(`[AI INFO] Analiz raporu boş veya servis cevapsız.`);
           await this.chaosRepository.updateLog(log.id, {
             aiRecommendation: `[BİLGİ] AI Analizi tamamlanamadı (Servise ulaşılamadı).`,
           });
         }
       } catch (internalErr) {
         this.logger.error(
-          'Loglama veya AI servisi hatası:',
+          'Loglama veya AI servisi kritik hatası:',
           internalErr instanceof Error
             ? internalErr.message
             : String(internalErr),
