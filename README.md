@@ -8,7 +8,7 @@
 
 ## Project Overview
 
-**ResiliEngine**, bulut tabanlı ve servis odaklı mimariler (SOA) için tasarlanmış yenilikçi bir **Kaos Mühendisliği (Chaos Engineering)** platformudur. Sistemlerin beklenmedik hatalara (ağ gecikmeleri, servis çökmeleri, veri tabanı bağlantı kopmaları) karşı ne kadar dayanıklı olduğunu ölçmek amacıyla sisteme bilinçli ve kontrollü arızalar (hata enjeksiyonu) verir. 
+**ResiliEngine**, bulut tabanlı ve servis odaklı mimariler (SOA) için tasarlanmış yenilikçi bir **Kaos Mühendisliği (Chaos Engineering)** platformudur. Sistemlerin beklenmedik hatalara (ağ gecikmeleri, servis çökmeleri, veri tabanı bağlantı kopmaları) karşı ne kadar dayanıklı olduğunu ölçmek amacıyla sisteme bilinçli ve kontrollü arızalar (hata enjeksiyonu) verir.
 
 Sadece hataları enjekte etmekle kalmaz, entegre **Yapay Zekâ (Gemini AI)** desteğiyle sistemin bu hatalara verdiği tepkileri analiz ederek, darboğazları tespit eder ve geliştiricilere doğrudan kullanılabilecek mimari iyileştirme önerileri (Root Cause Analysis) sunar.
 
@@ -41,7 +41,7 @@ graph TD
     classDef python fill:#3776ab,stroke:#fff,stroke-width:2px,color:#fff;
     classDef ai fill:#f4b400,stroke:#fff,stroke-width:2px,color:#000;
     classDef db fill:#336791,stroke:#fff,stroke-width:2px,color:#fff;
-    
+
     class Frontend react;
     class Backend nestjs;
     class AIService python;
@@ -59,20 +59,21 @@ graph TD
 
 Yayınlanan mikroservis ve bileşenlerimizin canlı ortam bağlantıları aşağıdadır (Render üzerinden host edilmektedir):
 
-| Servis / Bileşen | Teknoloji | Canlı Link (Render) | Durum |
-| :--- | :--- | :--- | :---: |
-| **Frontend (UI)** | React / Vite | [resiliengine-frontend.onrender.com](https://resiliengine-frontend.onrender.com) | 🟢 Aktif |
-| **Backend (API)** | NestJS | [resiliengine-backend.onrender.com](https://resiliengine-backend.onrender.com) | 🟢 Aktif |
-| **AI Service** | Python / FastAPI | [resiliengine-ai.onrender.com](https://resiliengine-ai.onrender.com) | 🟢 Aktif |
-| **Database** | Managed PostgreSQL | *[Dış erişime kapalı, iç ağda]* | 🟢 Aktif |
+| Servis / Bileşen  | Teknoloji          | Canlı Link (Render)                                                              |  Durum   |
+| :---------------- | :----------------- | :------------------------------------------------------------------------------- | :------: |
+| **Frontend (UI)** | React / Vite       | [resiliengine-frontend.onrender.com](https://resiliengine-frontend.onrender.com) | 🟢 Aktif |
+| **Backend (API)** | NestJS             | [resiliengine-backend.onrender.com](https://resiliengine-backend.onrender.com)   | 🟢 Aktif |
+| **AI Service**    | Python / FastAPI   | [resiliengine-ai.onrender.com](https://resiliengine-ai.onrender.com)             | 🟢 Aktif |
+| **Database**      | Managed PostgreSQL | _[Dış erişime kapalı, iç ağda]_                                                  | 🟢 Aktif |
 
-> *Not: Proje ortamları hazırlandıkça linkler test edilebilir hale gelecektir.*
+> _Not: Proje ortamları hazırlandıkça linkler test edilebilir hale gelecektir._
 
 ## How to Run (Local)
 
 Projeyi kendi bilgisayarınızda (lokal ortamda) tüm bileşenleriyle tek tuşla çalıştırmak için **Docker** kullanıyoruz.
 
 1. Projeyi sisteminize indirin:
+
    ```bash
    git clone <repo-url>
    cd ResiliEngine
@@ -86,6 +87,6 @@ Projeyi kendi bilgisayarınızda (lokal ortamda) tüm bileşenleriyle tek tuşla
    ```bash
    docker-compose up --build
    ```
-   
+
 > **`docker-compose up --build` nedir?**
 > Bu komut, projeyi çalıştırmak için gerekli olan `docker-compose.yml` dosyasını okur. İçerisinde tanımlı olan tüm servislerin (Frontend, Backend, AI Service, PostgreSQL veritabanı) imajlarını proje dosyalarından sıfırdan oluşturur (build aşaması). Ardından bu sanal konteynerların kendi aralarında iletişim kurabileceği ağ yapılandırmalarını (network) otomatik olarak kurup hepsini senkronize bir şekilde çalıştırır (up aşaması). Her sistemi tek tek bilgisayarına kurmak yerine bu komut sayesinde izole ve eksiksiz bir ortam elde edersin.
