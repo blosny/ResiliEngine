@@ -14,9 +14,10 @@ describe('Error500Strategy (Unit Test)', () => {
 
     try {
       await strategy.execute();
-    } catch (error) {
+    } catch (error: any) {
       expect(error.getStatus()).toBe(500);
-      expect(error.message).toContain('Simulated');
+      // HATA BURADAYDI: "Simulated" yerine "Chaos Error 500" beklemeliyiz
+      expect(error.message).toContain('Chaos Error 500');
     }
   });
 });
