@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChaosEngineService } from './chaos-engine.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { AiServiceClient } from '../../infrastructure/external/ai-service.client'; // AiServiceClient'ı import et
+import { AiServiceClient } from '../../infrastructure/external/ai-service.client';
 
-describe('ChaosEngineService Unit Test', () => {
+describe('ChaosEngineService Unit Test (Stage 4 - SCRUM-14)', () => {
   let service: ChaosEngineService;
   let mockRepository: any;
   let mockAiClient: any;
@@ -30,41 +30,66 @@ describe('ChaosEngineService Unit Test', () => {
       providers: [
         ChaosEngineService,
         { provide: 'IChaosRepository', useValue: mockRepository },
-        { provide: AiServiceClient, useValue: mockAiClient }, // HATA BURADAYDI: String yerine Class verdik
+        { provide: AiServiceClient, useValue: mockAiClient },
       ],
     }).compile();
 
     service = module.get<ChaosEngineService>(ChaosEngineService);
   });
 
-  it('Hata stratejisi tetiklendiğinde hatayı fırlatmalı', async () => {
-    const mockErrorStrategy: any = {
-      name: 'ERROR_500',
-      execute: jest
-        .fn()
-        .mockRejectedValue(
-          new HttpException('Fail', HttpStatus.INTERNAL_SERVER_ERROR),
-        ),
-    };
-
-    service.setStrategy(mockErrorStrategy);
-
-    // executeStrategy metodunun hata fırlattığını kontrol et
+  // FACT: Strateji seçilmeme durumu
+  it('strateji seçilmediğinde hata fırlatmalı (Fact)', async () => {
     await expect(
       service.executeStrategy({ target: 'test-service' }),
     ).rejects.toThrow();
   });
 
-  it('Gecikme stratejisi başarıyla tamamlanmalı', async () => {
-    const mockLatencyStrategy: any = {
+  // THEORY: Farklı strateji türleri için başarı testi (Hocanın istediği it.each yapısı)
+  it.each([
+    { type: 'LATENCY', target: 'payment-service' },
+    { type: 'ERROR_500', target: 'auth-service' },
+  ])(
+    'Strateji başarıyla koşturulmalı ve loglanmalı: %p (Theory)',
+    async (scenario) => {
+      const mockStrategy = {
+        name: scenario.type,
+        execute: jest.fn().mockResolvedValue(undefined),
+      };
+
+      service.setStrategy(mockStrategy as any);
+      await service.executeStrategy({ target: scenario.target });
+
+      // Hem DB'ye yazıldığını hem AI'ya istek atıldığını doğrula
+      expect(mockRepository.createLog).toHaveBeenCalled();
+      expect(mockAiClient.sendLogForAnalysis).toHaveBeenCalled();
+    },
+  );
+
+  // SCRUM-14 ÖZEL: AI Servisi kapalıyken Backend çökmemeli (Resilience Test)
+  it('AI servisine ulaşılamadığında Backend çökmemeli (Resilience Check)', async () => {
+    const mockStrategy = {
       name: 'LATENCY',
       execute: jest.fn().mockResolvedValue(undefined),
     };
 
-    service.setStrategy(mockLatencyStrategy);
-    await service.executeStrategy({ target: 'test-service' });
+    service.setStrategy(mockStrategy as any);
 
-    // DB'ye kayıt atılıp atılmadığını kontrol et
-    expect(mockRepository.createLog).toHaveBeenCalled();
+    // AI servisi hata fırlatacak (servis kapalı simülasyonu)
+    mockAiClient.sendLogForAnalysis.mockRejectedValue(
+      new Error('AI Service Down'),
+    );
+
+    // AI hatasına rağmen executeStrategy metodu çökmemeli (resolves)
+    await expect(
+      service.executeStrategy({ target: 'resilience-test' }),
+    ).resolves.not.toThrow();
+
+    // AI kopsa bile deney logunun veritabanına yine de yazıldığını doğrula
+    expect(mockRepository.createLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        target: 'resilience-test',
+        status: 'SUCCESS',
+      }),
+    );
   });
 });
