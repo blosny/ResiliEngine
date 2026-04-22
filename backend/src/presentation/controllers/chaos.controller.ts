@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Inject } from '@nestjs/common';
 import { ChaosEngineService } from '../../application/services/chaos-engine.service';
 import { LatencyStrategy } from '../../infrastructure/strategies/latency.strategy';
 import { Error500Strategy } from '../../infrastructure/strategies/error500.strategy';
+import type { IChaosRepository } from '../../domain/interfaces/chaos-repository.interface';
 
 @Controller('chaos')
 export class ChaosController {
@@ -9,34 +10,45 @@ export class ChaosController {
     private readonly chaosService: ChaosEngineService,
     private readonly latency: LatencyStrategy,
     private readonly error500: Error500Strategy,
+    @Inject('IChaosRepository')
+    private readonly chaosRepository: IChaosRepository,
   ) {}
 
-  /**
-   * POST /chaos/trigger
-   * Yeni bir kaos deneyi başlatır.
-   */
+  @Get('history')
+  async getHistory() {
+    const logs = await this.chaosRepository.findAll();
+    return logs.map((log) => ({
+      id: log.id,
+      message: log.errorDetails || `Kaos deneyi: ${log.type}`,
+      type: log.type,
+      aiRecommendation: log.aiRecommendation,
+      timestamp: log.timestamp,
+      status: log.status,
+      target: log.target,
+      duration: log.duration,
+    }));
+  }
+
   @Post('trigger')
-  async trigger(@Body() body: { type: string; target: string; params?: any }) {
-    // Strategy Pattern: Gelen tip'e göre strateji seçimi
-    if (body.type === 'LATENCY') {
+  async trigger(@Body() body: { type: string; target?: string; params?: any }) {
+    const typeUpper = body.type?.toUpperCase();
+
+    // Strateji seçimi
+    if (typeUpper === 'LATENCY') {
       this.chaosService.setStrategy(this.latency);
-    } else if (body.type === 'ERROR_500') {
+    } else {
       this.chaosService.setStrategy(this.error500);
     }
 
-    // Servis içindeki yeni metod ismini çağırıyoruz
     return await this.chaosService.executeStrategy({
-      target: body.target,
+      target: body.target || 'System',
       params: body.params,
     });
   }
 
-  /**
-   * GET /chaos/history
-   * STAGE 4: Tüm deney geçmişini listeleyen endpoint.
-   */
-  @Get('history')
-  async getHistory() {
-    return await this.chaosService.getHistory();
+  @Get('history/clear')
+  async clearHistory() {
+    await this.chaosRepository.clearLogs();
+    return { success: true };
   }
 }

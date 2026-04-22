@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from google import genai
+import google.generativeai as genai
 from sqlalchemy.orm import Session
 
 # --- YENİ: VERİTABANI İÇİN GEREKLİ DOSYALARI İÇE AKTARIYORUZ ---
@@ -28,7 +28,8 @@ if not api_key:
     raise ValueError("GEMINI_API_KEY bulunamadı!")
 
 # Gemini client
-client = genai.Client(api_key=api_key)
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 
 class LogRequest(BaseModel):
@@ -55,10 +56,7 @@ Yanıtı SADECE şu JSON formatında ver:
 """
 
     try:
-        response = client.models.generate_content(
-            model="models/gemini-flash-latest", 
-            contents=prompt
-        )
+        response = model.generate_content(prompt)
 
         text = response.text
 

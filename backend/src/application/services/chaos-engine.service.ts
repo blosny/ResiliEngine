@@ -1,6 +1,5 @@
 import { Injectable, Inject, Logger, HttpException } from '@nestjs/common';
 import { IChaosStrategy } from '../../domain/strategies/chaos.strategy.interface';
-// TS1272 Çözümü: Interface'i 'import type' olarak alıyoruz
 import type { IChaosRepository } from '../../domain/interfaces/chaos-repository.interface';
 import { AiServiceClient } from '../../infrastructure/external/ai-service.client';
 
@@ -53,7 +52,6 @@ export class ChaosEngineService {
       // Hata enjeksiyonunu gerçekleştir
       await this.strategy.execute(config.params);
     } catch (err: unknown) {
-      // TS18046 Çözümü: Unknown error tipini yönetiyoruz
       status = 'FAILED';
       errorDetails = err instanceof Error ? err.message : String(err);
 
@@ -74,17 +72,37 @@ export class ChaosEngineService {
         });
 
         // 2. SCRUM-11: Tunahan'ın AI Servisine Gönder
-        await this.aiClient.sendLogForAnalysis({
-          experimentId: log.id,
-          type: log.type,
-          target: log.target,
-          status: log.status,
-          metrics: { duration },
-          timestamp: log.timestamp,
+        // Arda'nın eklediği AI yanıt işleme mantığını buraya entegre ediyoruz
+        const aiResponse = await this.aiClient.sendLogForAnalysis({
+          log_content: `Hata Türü: ${log.type}, Hedef: ${log.target}, Durum: ${log.status}, Mesaj: ${log.errorDetails || 'Yok'}`,
         });
+
+        if (aiResponse && aiResponse.recommendation) {
+          await this.chaosRepository.updateLog(log.id, {
+            aiRecommendation: aiResponse.recommendation,
+          });
+        } else if (aiResponse && aiResponse.error) {
+          await this.chaosRepository.updateLog(log.id, {
+            aiRecommendation: `[HATA] ${aiResponse.error}`,
+          });
+        } else {
+          await this.chaosRepository.updateLog(log.id, {
+            aiRecommendation: `[BİLGİ] AI Analizi tamamlanamadı (Servise ulaşılamadı).`,
+          });
+        }
       } catch (internalErr) {
-        this.logger.error('Loglama veya AI servisi hatası:', internalErr);
+        this.logger.error(
+          'Loglama veya AI servisi hatası:',
+          internalErr instanceof Error
+            ? internalErr.message
+            : String(internalErr),
+        );
       }
     }
+  }
+
+  // Geriye dönük uyumluluk veya Arda'nın kodları için alias
+  async run(config: { target: string; params?: any }) {
+    return await this.executeStrategy(config);
   }
 }

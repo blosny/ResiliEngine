@@ -22,13 +22,19 @@ import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor'
     HttpModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'db',
-      port: 5432,
-      username: process.env.DB_USER || 'resiliengine_user',
-      password: process.env.DB_PASSWORD || 'password123',
-      database: process.env.DB_NAME || 'resiliengine_db',
+      // Taha'nın Render düzenlemesi: DATABASE_URL varsa onu kullan, yoksa yerel config
+      url:
+        process.env.DATABASE_URL ||
+        'postgresql://resiliengine_user:password123@db:5432/resiliengine_db',
       entities: [User, ChaosLog],
       synchronize: true,
+      // Render'da SSL gereklidir
+      ssl:
+        process.env.DATABASE_URL &&
+        !process.env.DATABASE_URL.includes('db:5432') &&
+        !process.env.DATABASE_URL.includes('localhost')
+          ? { rejectUnauthorized: false }
+          : false,
     }),
     TypeOrmModule.forFeature([User, ChaosLog]),
   ],

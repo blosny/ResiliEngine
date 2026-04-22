@@ -26,7 +26,7 @@ export class ChaosLog {
   errorDetails?: string;
 
   @Column({ type: 'text', nullable: true })
-  aiAnalysis?: string;
+  aiRecommendation?: string;
 
   @CreateDateColumn()
   timestamp!: Date;
