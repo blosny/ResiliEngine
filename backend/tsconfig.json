@@ -18,7 +18,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "ignoreDeprecations": "6.0",
-    "types": ["node"]
-  }
+    "types": ["node", "jest"]
+  },
+  "exclude": ["node_modules", "test", "dist"]
 }

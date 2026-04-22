@@ -5,7 +5,7 @@ export class Error500Strategy implements IChaosStrategy {
   name = 'ERROR_500';
   async execute(): Promise<void> {
     throw new HttpException(
-      'Simulated Error',
+      'Chaos Error 500',
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }

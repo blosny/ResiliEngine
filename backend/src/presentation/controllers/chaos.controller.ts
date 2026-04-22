@@ -17,28 +17,37 @@ export class ChaosController {
   @Get('history')
   async getHistory() {
     const logs = await this.chaosRepository.findAll();
-    return logs.map(log => ({
+    return logs.map((log) => ({
       id: log.id,
       message: log.errorDetails || `Kaos deneyi: ${log.type}`,
       type: log.type,
-      aiRecommendation: log.aiRecommendation
+      aiRecommendation: log.aiRecommendation,
+      timestamp: log.timestamp,
+      status: log.status,
+      target: log.target,
+      duration: log.duration,
     }));
   }
 
   @Post('trigger')
   async trigger(@Body() body: { type: string; target?: string; params?: any }) {
     const typeUpper = body.type?.toUpperCase();
-    if (typeUpper === 'LATENCY') Object.assign(this.chaosService, { strategy: this.latency }); // Using setStrategy dynamically
-    this.chaosService.setStrategy(typeUpper === 'LATENCY' ? this.latency : this.error500);
-    
-    return await this.chaosService.run({
+
+    // Strateji seçimi
+    if (typeUpper === 'LATENCY') {
+      this.chaosService.setStrategy(this.latency);
+    } else {
+      this.chaosService.setStrategy(this.error500);
+    }
+
+    return await this.chaosService.executeStrategy({
       target: body.target || 'System',
       params: body.params,
     });
   }
 
   @Get('history/clear')
-  async clearHistoryMethodFallback() {
+  async clearHistory() {
     await this.chaosRepository.clearLogs();
     return { success: true };
   }
