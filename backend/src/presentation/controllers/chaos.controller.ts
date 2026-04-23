@@ -2,6 +2,8 @@ import { Controller, Post, Body, Get, Inject } from '@nestjs/common';
 import { ChaosEngineService } from '../../application/services/chaos-engine.service';
 import { LatencyStrategy } from '../../infrastructure/strategies/latency.strategy';
 import { Error500Strategy } from '../../infrastructure/strategies/error500.strategy';
+import { Error429Strategy } from '../../infrastructure/strategies/error429.strategy';
+import { Error401Strategy } from '../../infrastructure/strategies/error401.strategy';
 import type { IChaosRepository } from '../../domain/interfaces/chaos-repository.interface';
 
 @Controller('chaos')
@@ -10,6 +12,8 @@ export class ChaosController {
     private readonly chaosService: ChaosEngineService,
     private readonly latency: LatencyStrategy,
     private readonly error500: Error500Strategy,
+    private readonly error429: Error429Strategy,
+    private readonly error401: Error401Strategy,
     @Inject('IChaosRepository')
     private readonly chaosRepository: IChaosRepository,
   ) {}
@@ -34,10 +38,21 @@ export class ChaosController {
     const typeUpper = body.type?.toUpperCase();
 
     // Strateji seçimi
-    if (typeUpper === 'LATENCY') {
-      this.chaosService.setStrategy(this.latency);
-    } else {
-      this.chaosService.setStrategy(this.error500);
+    switch (typeUpper) {
+      case 'LATENCY':
+        this.chaosService.setStrategy(this.latency);
+        break;
+      case 'RATE_LIMIT':
+      case '429':
+        this.chaosService.setStrategy(this.error429);
+        break;
+      case 'UNAUTHORIZED':
+      case '401':
+        this.chaosService.setStrategy(this.error401);
+        break;
+      default:
+        this.chaosService.setStrategy(this.error500);
+        break;
     }
 
     return await this.chaosService.executeStrategy({

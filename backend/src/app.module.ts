@@ -20,6 +20,8 @@ import { TypeOrmUserRepository } from './infrastructure/repositories/user.reposi
 import { TypeOrmChaosRepository } from './infrastructure/repositories/chaos.repository';
 import { LatencyStrategy } from './infrastructure/strategies/latency.strategy';
 import { Error500Strategy } from './infrastructure/strategies/error500.strategy';
+import { Error429Strategy } from './infrastructure/strategies/error429.strategy';
+import { Error401Strategy } from './infrastructure/strategies/error401.strategy';
 import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor';
 
 @Module({
@@ -51,6 +53,8 @@ import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor'
     AiServiceClient,
     LatencyStrategy,
     Error500Strategy,
+    Error429Strategy,
+    Error401Strategy,
     { provide: 'IUserRepository', useClass: TypeOrmUserRepository },
     { provide: 'IChaosRepository', useClass: TypeOrmChaosRepository },
     { provide: APP_INTERCEPTOR, useClass: ChaosInterceptor },

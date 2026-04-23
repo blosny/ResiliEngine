@@ -1,6 +1,7 @@
-import { AlertTriangle, Cpu, History, RefreshCcw, Trash2, ShieldCheck, Activity, Terminal, ChevronRight, BarChart3, Database } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { triggerChaos, getHistory, clearHistory } from './api';
+import { AlertTriangle, Cpu, History, RefreshCcw, Trash2, ShieldCheck, Activity, Terminal, ChevronRight, BarChart3, Database, Lock, Zap, FileText, Send, Info, CheckCircle2, XCircle, TrendingUp } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { triggerChaos, getHistory, clearHistory, analyzeCustomLog } from './api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 type HistoryLog = {
   id: string | number;
@@ -11,16 +12,31 @@ type HistoryLog = {
   status?: string;
   target?: string;
   duration?: number;
+  mode?: 'live' | 'cached' | 'fallback';
 };
 
 function App() {
   const [history, setHistory] = useState<HistoryLog[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Grafik için son 10 kaydı formatla
+  const chartData = useMemo(() => {
+    const lastLogs = [...history].reverse().slice(-10);
+    if (lastLogs.length === 0) {
+      return Array.from({ length: 10 }).map((_, i) => ({ name: i, value: 50 + Math.random() * 20 }));
+    }
+    return lastLogs.map((log, index) => ({
+      name: index,
+      value: log.type === 'LATENCY' ? (log.duration || 2000) : (log.status === 'FAILED' ? 500 : 50 + Math.random() * 20),
+      type: log.type
+    }));
+  }, [history]);
+
   const fetchHistory = async () => {
     try {
       const data = await getHistory();
-      setHistory(Array.isArray(data) ? [...data].reverse() : []);
+      const logs = Array.isArray(data) ? [...data].reverse() : [];
+      setHistory(logs);
     } catch (err) {
       console.error("Geçmiş yüklenemedi", err);
     }
@@ -32,17 +48,15 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleTrigger = async (type: 'latency' | 'error500') => {
+  const handleTrigger = async (type: 'latency' | 'error500' | '429' | '401') => {
     setLoading(true);
     try {
       await triggerChaos(type);
-      fetchHistory();
+      await fetchHistory();
     } catch (err: any) {
-      if (err.response?.status === 500 && type === 'error500') {
-        fetchHistory();
-      }
+      await fetchHistory();
     } finally {
-      setTimeout(() => setLoading(false), 1000);
+      setTimeout(() => setLoading(false), 1500);
     }
   };
 
@@ -58,125 +72,171 @@ function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#09090b', color: '#fafafa', padding: '60px 40px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#09090b', color: '#fafafa', padding: '40px 20px' }}>
       
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         
-        {/* Top Navigation / Header */}
-        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '80px', borderBottom: '1px solid #27272a', paddingBottom: '32px' }}>
+        {/* Header Section */}
+        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '60px', borderBottom: '1px solid #27272a', paddingBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <div style={{ width: '56px', height: '56px', backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '56px', height: '56px', backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)' }}>
               <Cpu size={32} color="#3b82f6" />
             </div>
             <div>
-              <h1 style={{ fontSize: '32px', fontWeight: 800, letterSpacing: '-1px' }}>ResiliEngine <span style={{ color: '#71717a', fontWeight: 400 }}>Monitoring</span></h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '4px' }}>
-                <span style={{ fontSize: '14px', color: '#71717a', display: 'flex', alignItems: 'center', gap: '6px' }}><ShieldCheck size={14} color="#22c55e" /> System Online</span>
-                <span style={{ fontSize: '14px', color: '#71717a', display: 'flex', alignItems: 'center', gap: '6px' }}><Database size={14} /> PostgreSQL: Connected</span>
+              <h1 style={{ fontSize: '32px', fontWeight: 800, letterSpacing: '-1px', margin: 0 }}>ResiliEngine <span style={{ color: '#71717a', fontWeight: 400 }}>v2.0</span></h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#71717a' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e', boxShadow: '0 0 8px #22c55e' }}></div>
+                  Sunucu: Aktif
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#71717a' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e', boxShadow: '0 0 8px #22c55e' }}></div>
+                  AI Servisi: Çalışıyor
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#71717a' }}>
+                  <Database size={14} color="#3b82f6" />
+                  Veritabanı: Bağlı
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div className="panel" style={{ padding: '12px 24px', textAlign: 'left', minWidth: '160px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#71717a', textTransform: 'uppercase' }}>Active Logs</div>
-              <div style={{ fontSize: '24px', fontWeight: 800 }}>{history.length}</div>
             </div>
           </div>
         </header>
 
-        <main style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '48px' }}>
+        <main style={{ display: 'grid', gridTemplateColumns: '450px 1fr', gap: '40px' }}>
           
-          {/* Action Column */}
+          {/* Controls & Tools */}
           <aside style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            
+            {/* Live Performance Graph */}
+            <div className="panel" style={{ padding: '24px', height: '240px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <TrendingUp size={18} color="#3b82f6" /> Performans Monitörü
+                </h2>
+                <span style={{ fontSize: '11px', color: '#71717a' }}>Sistem Yanıt Süresi (ms)</span>
+              </div>
+              <div style={{ width: '100%', height: '140px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                    <XAxis dataKey="name" hide />
+                    <YAxis hide domain={[0, 2500]} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
+                      itemStyle={{ color: '#3b82f6' }}
+                    />
+                    <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorValue)" strokeWidth={2} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Chaos Control Panel */}
             <div className="panel" style={{ padding: '32px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <BarChart3 size={24} color="#3b82f6" /> Chaos Control
+                <Zap size={24} color="#f59e0b" /> Hata Enjeksiyonu
               </h2>
-              <p style={{ color: '#71717a', fontSize: '15px', lineHeight: '1.6', marginBottom: '40px' }}>
-                Trigger fault injection strategies to evaluate infrastructure resilience and recovery patterns.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <button className="btn btn-outline" onClick={() => handleTrigger('latency')} disabled={loading}>
-                  <Activity size={20} />
-                  <div style={{ flex: 1, textAlign: 'left' }}>Inject Latency (+2000ms)</div>
-                  <ChevronRight size={18} opacity={0.3} />
+                  <Activity size={18} color="#3b82f6" /> Gecikme
                 </button>
-
-                <button className="btn btn-outline" style={{ borderColor: 'rgba(239, 68, 68, 0.2)' }} onClick={() => handleTrigger('error500')} disabled={loading}>
-                  <Terminal size={20} color="#ef4444" />
-                  <div style={{ flex: 1, textAlign: 'left' }}>Force Service Failure (500)</div>
-                  <ChevronRight size={18} opacity={0.3} />
+                <button className="btn btn-outline" onClick={() => handleTrigger('error500')} disabled={loading}>
+                  <Terminal size={18} color="#ef4444" /> Çökme (500)
+                </button>
+                <button className="btn btn-outline" onClick={() => handleTrigger('429')} disabled={loading}>
+                  <RefreshCcw size={18} color="#a855f7" /> Sınır Aşımı
+                </button>
+                <button className="btn btn-outline" onClick={() => handleTrigger('401')} disabled={loading}>
+                  <Lock size={18} color="#ec4899" /> Yetki Hatası
                 </button>
               </div>
 
               {loading && (
-                <div style={{ marginTop: '32px', padding: '16px', border: '1px solid #3b82f6', borderRadius: '8px', backgroundColor: 'rgba(59, 130, 246, 0.05)', color: '#3b82f6', fontSize: '13px', fontWeight: 700, textAlign: 'center' }}>
-                  EXPERIMENT IN PROGRESS...
+                <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', color: '#3b82f6', fontSize: '12px', fontWeight: 700 }}>
+                  <RefreshCcw className="spin" size={16} /> HATA ENJEKTE EDİLİYOR...
                 </div>
               )}
             </div>
           </aside>
 
-          {/* Logs Column */}
-          <div className="panel" style={{ display: 'flex', flexDirection: 'column', minHeight: '800px' }}>
-            <div style={{ padding: '32px', borderBottom: '1px solid #27272a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Audit Logs & AI Analysis */}
+          <section className="panel" style={{ display: 'flex', flexDirection: 'column', minHeight: '800px' }}>
+            <div style={{ padding: '24px 32px', borderBottom: '1px solid #27272a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <History size={24} color="#3b82f6" /> System Audit Logs
+                <History size={24} color="#3b82f6" /> Deney ve Analiz Geçmişi
               </h2>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button className="btn btn-outline" style={{ padding: '8px 12px', width: 'auto' }} onClick={fetchHistory}><RefreshCcw size={18} /></button>
-                <button className="btn btn-danger" style={{ padding: '8px 12px', width: 'auto' }} onClick={handleClear}><Trash2 size={18} /></button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn btn-outline" style={{ padding: '8px', width: '40px' }} onClick={fetchHistory}><RefreshCcw size={18} /></button>
+                <button className="btn btn-danger" style={{ padding: '8px', width: '40px' }} onClick={handleClear}><Trash2 size={18} /></button>
               </div>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
               {history.length === 0 ? (
-                <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#3f3f46', gap: '24px' }}>
-                  <Terminal size={64} opacity={0.1} />
-                  <p style={{ fontWeight: 500 }}>No system activity recorded in current session.</p>
+                <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#3f3f46', gap: '16px' }}>
+                  <ShieldCheck size={48} opacity={0.2} />
+                  <p style={{ fontSize: '14px' }}>Sistem boşta. Gösterilecek olay yok.</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                   {history.map((log) => (
-                    <div key={log.id} style={{ borderBottom: '1px solid #27272a', paddingBottom: '40px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                        <div style={{ display: 'flex', gap: '20px' }}>
-                          <div style={{ width: '48px', height: '48px', backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {log.type === 'LATENCY' ? <Activity size={24} color="#3b82f6" /> : <Terminal size={24} color="#ef4444" />}
+                    <div key={log.id} style={{ borderBottom: '1px solid #27272a', paddingBottom: '32px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', gap: '16px' }}>
+                          <div style={{ width: '40px', height: '40px', backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {log.type === 'LATENCY' ? <Activity size={20} color="#3b82f6" /> : 
+                             log.type === 'CUSTOM' ? <FileText size={20} color="#a855f7" /> :
+                             <Terminal size={20} color="#ef4444" />}
                           </div>
                           <div>
-                            <div style={{ fontSize: '20px', fontWeight: 700 }}>{log.message || `System Fault: ${log.type}`}</div>
-                            <div style={{ fontSize: '13px', color: '#71717a', marginTop: '4px', fontFamily: 'JetBrains Mono' }}>
-                              EVENT_ID: {String(log.id).toUpperCase()} • TIMESTAMP: {log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A'}
+                            <div style={{ fontSize: '18px', fontWeight: 700 }}>
+                              {log.type === 'LATENCY' ? 'Gecikme Testi' : 
+                               log.type === 'ERROR_500' ? 'Servis Çökme Testi' :
+                               log.type === 'RATE_LIMIT' || log.type === '429' ? 'Sınır Aşımı Testi' :
+                               log.type === 'UNAUTHORIZED' || log.type === '401' ? 'Yetki Hatası Testi' : 
+                               `${log.type} Hatası`}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#71717a', fontFamily: 'monospace' }}>
+                              {log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : 'ŞİMDİ'} • HEDEF: {log.target}
                             </div>
                           </div>
                         </div>
-                        <div className={`badge ${log.status === 'SUCCESS' ? 'badge-success' : 'badge-error'}`}>{log.status}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div className={`badge ${log.status === 'SUCCESS' ? 'badge-success' : 'badge-injection'}`} style={{ fontSize: '10px' }}>
+                            {log.status === 'SUCCESS' ? 'NORMAL ÇALIŞMA' : 'BAŞARILI ENJEKSİYON'}
+                          </div>
+                          {log.mode && (
+                            <div style={{ 
+                              fontSize: '10px', 
+                              padding: '2px 10px', 
+                              borderRadius: '4px', 
+                              fontWeight: 700,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              backgroundColor: log.mode === 'live' ? 'rgba(59, 130, 246, 0.15)' : log.mode === 'cached' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                              color: log.mode === 'live' ? '#60a5fa' : log.mode === 'cached' ? '#4ade80' : '#fbbf24',
+                              border: `1px solid ${log.mode === 'live' ? '#3b82f6' : log.mode === 'cached' ? '#22c55e' : '#f59e0b'}`
+                            }}>
+                              {log.mode === 'live' && <div className="pulse-blue" style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#60a5fa' }}></div>}
+                              {log.mode === 'live' ? 'CANLI AI' : log.mode === 'cached' ? 'HAFIZADAN' : 'YEREL MOTOR'}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px', backgroundColor: '#09090b', padding: '20px', borderRadius: '8px' }}>
-                        <div>
-                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#71717a', textTransform: 'uppercase' }}>Target Resource</div>
-                          <div style={{ fontSize: '14px', fontWeight: 600, marginTop: '4px' }}>{log.target || 'Infrastructure'}</div>
+                      <div style={{ backgroundColor: 'rgba(24, 24, 27, 0.5)', border: '1px solid #27272a', borderRadius: '12px', padding: '20px', borderLeft: '4px solid #3b82f6' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', marginBottom: '10px' }}>
+                          <Info size={14} /> Mimari İyileştirme Önerisi
                         </div>
-                        <div>
-                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#71717a', textTransform: 'uppercase' }}>Response Time</div>
-                          <div style={{ fontSize: '14px', fontWeight: 600, marginTop: '4px' }}>{log.duration}ms</div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '11px', fontWeight: 700, color: '#71717a', textTransform: 'uppercase' }}>Fault Type</div>
-                          <div style={{ fontSize: '14px', fontWeight: 600, marginTop: '4px' }}>{log.type}</div>
-                        </div>
-                      </div>
-
-                      <div style={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '24px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <ChevronRight size={14} /> AI Analysis Report
-                        </div>
-                        <div style={{ fontSize: '15px', color: log.aiRecommendation?.includes('[HATA]') ? '#f87171' : '#d1d5db', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>
-                          {log.aiRecommendation || "Generating architectural analysis based on system metrics..."}
+                        <div style={{ fontSize: '14px', color: '#d1d5db', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                          {log.aiRecommendation || "Sistem etkisi ve çözüm yolları analiz ediliyor..."}
                         </div>
                       </div>
                     </div>
@@ -184,9 +244,28 @@ function App() {
                 </div>
               )}
             </div>
-          </div>
+          </section>
         </main>
       </div>
+
+      <style>{`
+        .spin { animation: spin 1s linear infinite; }
+        .pulse-blue { animation: pulse-blue 2s infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(96, 165, 250, 0); } 100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0); } }
+        .panel { background: rgba(12, 12, 14, 0.6); border: 1px solid #27272a; border-radius: 16px; backdrop-filter: blur(12px); transition: all 0.2s ease; }
+        .btn { display: flex; alignItems: center; justifyContent: center; gap: 8px; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 1px solid #27272a; color: #fff; }
+        .btn-outline:hover { background: #18181b; border-color: #3b82f6; }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .badge { padding: 4px 10px; border-radius: 6px; font-weight: 700; text-transform: uppercase; }
+        .badge-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .badge-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .badge-injection { background: rgba(20, 184, 166, 0.1); color: #14b8a6; border: 1px solid rgba(20, 184, 166, 0.2); }
+      `}</style>
     </div>
   );
 }
