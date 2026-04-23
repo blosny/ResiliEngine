@@ -43,6 +43,22 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-password123}
       - POSTGRES_DB=resiliengine_db
 
+  local-ai:
+    image: ollama/ollama:latest
+    container_name: resiliengine_local_ai
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama_data:/root/.ollama
+    # Eğer NVIDIA ekran kartın varsa aşağıdaki bloğu aktif edebilirsin:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
   frontend:
     build: ./frontend
     container_name: resiliengine_frontend
