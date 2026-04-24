@@ -11,7 +11,7 @@ from database import engine, get_db
 import models
 from repository import AnalysisRepository
 
-# Veritabanında tabloları otomatik oluştur
+# Veritabanında tabloları otomatik oluştu
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ResiliEngine - AI Analysis Service")
