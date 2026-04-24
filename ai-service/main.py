@@ -5,7 +5,8 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
+# SCRUM-39: Akıllı Karar Mekanizması - Logları önce yerel Knowledge Base'de arar, 
+# eşleşme bulamazsa Yerel AI (Ollama) servisine danışır.
 # Veritabanı importları
 from database import engine, get_db
 import models
