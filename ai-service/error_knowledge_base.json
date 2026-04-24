@@ -1,0 +1,602 @@
+[
+  {
+    "code": "ECONNREFUSED",
+    "cause": "Hedef servis veya veritabanı bağlantıyı reddetti.",
+    "solution": "Bağlanmaya çalıştığınız servisin (Docker, DB vb.) ayakta olduğunu ve portunun doğru olduğunu kontrol edin.",
+    "example_fix": "docker ps ile container'ların çalıştığını doğrula"
+  },
+  {
+    "code": "MODULE_NOT_FOUND",
+    "cause": "Node.js tarafında bir paket eksik.",
+    "solution": "Terminalde 'npm install' komutunu çalıştırın.",
+    "example_fix": "npm install"
+  },
+  {
+    "code": "ModuleNotFoundError",
+    "cause": "Python tarafında bir kütüphane yüklü değil.",
+    "solution": "pip install <paket_adi> komutuyla eksik kütüphaneyi yükleyin.",
+    "example_fix": "pip install -r requirements.txt"
+  },
+  {
+    "code": "EADDRINUSE",
+    "cause": "Seçilen port başka bir uygulama tarafından kullanılıyor.",
+    "solution": "Portu kullanan uygulamayı kapatın veya uygulamanızın portunu değiştirin.",
+    "example_fix": "lsof -i :3000 ile portu kullanan process'i bul, kill -9 <PID> ile kapat"
+  },
+  {
+    "code": "IndentationError",
+    "cause": "Python kodunda boşluk/tab hatası.",
+    "solution": "Kodun girintilerini kontrol edin, tab ve boşlukları karıştırmayın.",
+    "example_fix": "Editörde 'Convert Tabs to Spaces' seçeneğini kullan"
+  },
+  {
+    "code": "SyntaxError: Unexpected token",
+    "cause": "JavaScript/Node.js yazım hatası.",
+    "solution": "Parantezlerin ve virgüllerin doğru kapandığından emin olun.",
+    "example_fix": "JSON.parse() için try/catch kullan"
+  },
+  {
+    "code": "KeyError",
+    "cause": "Python sözlüğünde (dict) olmayan bir anahtara erişim.",
+    "solution": "Anahtarın varlığını kontrol edin veya .get() metodunu kullanın.",
+    "example_fix": "value = data.get('key', 'varsayilan_deger')"
+  },
+  {
+    "code": "TypeError: Cannot read properties of undefined",
+    "cause": "JavaScript'te boş bir objenin alt özelliğine erişim.",
+    "solution": "Opsiyonel zincirleme (obj?.prop) kullanın veya objenin dolu olduğunu kontrol edin.",
+    "example_fix": "const val = obj?.prop?.subprop ?? 'default'"
+  },
+  {
+    "code": "404 Not Found",
+    "cause": "İstenen URL veya API endpointi bulunamadı.",
+    "solution": "İsteğin atıldığı URL yolunu ve sunucu rotalarını kontrol edin.",
+    "example_fix": "app.use((req, res) => res.status(404).json({ error: 'Bulunamadı' }))"
+  },
+  {
+    "code": "401 Unauthorized",
+    "cause": "Geçersiz veya eksik kimlik doğrulama (Token/API Key).",
+    "solution": "Authorization header'ını ve Token süresini kontrol edin.",
+    "example_fix": "headers: { 'Authorization': 'Bearer <token>' }"
+  },
+  {
+    "code": "403 Forbidden",
+    "cause": "Erişim yetkisi yetersiz.",
+    "solution": "Kullanıcının bu işlemi yapmak için gerekli izinlere sahip olduğunu doğrulayın.",
+    "example_fix": "if (user.role !== 'admin') return res.status(403).json({ error: 'Yetkisiz' })"
+  },
+  {
+    "code": "500 Internal Server Error",
+    "cause": "Sunucu tarafında beklenmedik bir hata oluştu.",
+    "solution": "Sunucu loglarını inceleyerek hatanın tam satırını bulun.",
+    "example_fix": "app.use((err, req, res, next) => { console.error(err); res.status(500).json({ error: 'Sunucu hatası' }) })"
+  },
+  {
+    "code": "502 Bad Gateway",
+    "cause": "Proxy sunucusu ana sunucudan geçersiz yanıt aldı.",
+    "solution": "Arka plandaki servisin (upstream) düzgün çalıştığından emin olun.",
+    "example_fix": "docker logs <container_name> ile upstream servis loglarını kontrol et"
+  },
+  {
+    "code": "504 Gateway Timeout",
+    "cause": "Sunucu yanıt vermekte gecikti.",
+    "solution": "İşlemin süresini optimize edin veya timeout değerini artırın.",
+    "example_fix": "proxy_read_timeout 300s; (Nginx için)"
+  },
+  {
+    "code": "OperationalError: no such table",
+    "cause": "Veritabanında tablo bulunamadı.",
+    "solution": "Migration işlemlerini çalıştırın.",
+    "example_fix": "alembic upgrade head veya npx prisma db push"
+  },
+  {
+    "code": "FileNotFoundError",
+    "cause": "Dosya sisteminde belirtilen dosya yok.",
+    "solution": "Dosya yolunun doğruluğunu ve dosya izinlerini kontrol edin.",
+    "example_fix": "import os; os.path.exists('dosya.txt') ile kontrol et"
+  },
+  {
+    "code": "CORS Error",
+    "cause": "Tarayıcı, farklı bir kökenden gelen isteği engelledi.",
+    "solution": "Backend tarafında CORS politikasını yapılandırın.",
+    "example_fix": "app.use(cors({ origin: 'http://localhost:3000' }))"
+  },
+  {
+    "code": "JWT Expired",
+    "cause": "Oturum anahtarının süresi dolmuş.",
+    "solution": "Kullanıcıyı tekrar login ekranına yönlendirin veya refresh token kullanın.",
+    "example_fix": "if (err.name === 'TokenExpiredError') { /* refresh et */ }"
+  },
+  {
+    "code": "ConnectionTimeout",
+    "cause": "Veritabanı bağlantısı zaman aşımına uğradı.",
+    "solution": "Ağ bağlantısını ve veritabanı yükünü kontrol edin.",
+    "example_fix": "create_engine(url, pool_timeout=30, connect_args={'connect_timeout': 10})"
+  },
+  {
+    "code": "Permission Denied",
+    "cause": "Dosya okuma/yazma yetkisi yok.",
+    "solution": "chmod veya chown komutları ile gerekli izinleri verin.",
+    "example_fix": "chmod 644 dosya.txt veya chown user:group dosya.txt"
+  },
+  {
+    "code": "ZodError / ValidationError",
+    "cause": "Gelen veri beklenen şemaya uymuyor.",
+    "solution": "Frontend'den gönderilen veri tiplerini kontrol edin.",
+    "example_fix": "const schema = z.object({ email: z.string().email() })"
+  },
+  {
+    "code": "Memory Limit Exceeded",
+    "cause": "Uygulama kendisine ayrılan RAM miktarını aştı.",
+    "solution": "Bellek sızıntılarını kontrol edin veya Docker limitlerini artırın.",
+    "example_fix": "node --max-old-space-size=4096 app.js"
+  },
+  {
+    "code": "Docker: Container is not running",
+    "cause": "İşlem yapılmaya çalışılan konteyner kapalı.",
+    "solution": "docker ps -a ile kontrol edip docker start komutuyla başlatın.",
+    "example_fix": "docker ps -a && docker start <container_id>"
+  },
+  {
+    "code": "Git Merge Conflict",
+    "cause": "Aynı satırda iki farklı değişiklik çakıştı.",
+    "solution": "Dosyayı açıp çakışan satırları manuel olarak düzenleyin ve commit atın.",
+    "example_fix": "git status ile çakışan dosyaları bul, düzenle, git add . && git merge --continue"
+  },
+  {
+    "code": "ENOTFOUND",
+    "cause": "DNS hatası, host ismi çözülemiyor.",
+    "solution": "Bağlanmaya çalıştığınız URL'nin doğru yazıldığından ve internetin olduğundan emin olun.",
+    "example_fix": "ping google.com ile internet bağlantısını test et"
+  },
+  {
+    "code": "ReferenceError",
+    "cause": "Tanımlanmamış bir değişkene erişilmeye çalışıldı.",
+    "solution": "Değişkenin tanımlandığı kapsamı (scope) kontrol edin.",
+    "example_fix": "console.log(typeof myVar) ile değişken varlığını kontrol et"
+  },
+  {
+    "code": "AttributeError",
+    "cause": "Objede olmayan bir fonksiyona veya özelliğe erişim.",
+    "solution": "Objenin tipini kontrol edin ve doğru özelliği çağırdığınızdan emin olun.",
+    "example_fix": "if hasattr(obj, 'method'): obj.method()"
+  },
+  {
+    "code": "Invalid API Key",
+    "cause": "Sağlanan API anahtarı geçersiz veya iptal edilmiş.",
+    "solution": ".env dosyasındaki anahtarı güncelleyin.",
+    "example_fix": ".env dosyasına API_KEY=yeni_anahtar ekle"
+  },
+  {
+    "code": "Too Many Requests (429)",
+    "cause": "Hız sınırı (rate limit) aşıldı.",
+    "solution": "İstek aralıklarını açın veya API limitlerini yükseltin.",
+    "example_fix": "time.sleep(2 ** attempt) ile exponential backoff uygula"
+  },
+  {
+    "code": "Database is Locked",
+    "cause": "SQLite gibi veritabanlarında aynı anda birden fazla yazma isteği.",
+    "solution": "Yazma işlemlerini kuyruğa alın veya veritabanını PostgreSQL'e yükseltin.",
+    "example_fix": "create_engine(url, connect_args={'timeout': 20})"
+  },
+  {
+    "code": "AttributeError: NoneType",
+    "cause": "None döndüren bir fonksiyonun üzerinde işlem yapılmaya çalışıldı.",
+    "solution": "Fonksiyonun None dönüp dönmediğini kontrol edin.",
+    "example_fix": "if result is not None: result.do_something()"
+  },
+  {
+    "code": "TypeError: unsupported operand",
+    "cause": "Uyumsuz veri tipleri arasında işlem yapıldı (örn. int + str).",
+    "solution": "Tür dönüşümü yapın.",
+    "example_fix": "str(sayi) + metin veya int(metin) + sayi"
+  },
+  {
+    "code": "IndexError: list index out of range",
+    "cause": "Listenin sınırları dışında bir indekse erişildi.",
+    "solution": "Listede eleman olup olmadığını kontrol edin.",
+    "example_fix": "if len(liste) > 0: ilk = liste[0]"
+  },
+  {
+    "code": "ValueError: invalid literal for int()",
+    "cause": "String bir değer int'e çevrilmeye çalışıldı.",
+    "solution": "try/except ile dönüşümü güvenli yapın.",
+    "example_fix": "try: num = int(value) \nexcept ValueError: num = 0"
+  },
+  {
+    "code": "ImportError",
+    "cause": "Modül bulundu ama içindeki belirli bir isim import edilemedi.",
+    "solution": "Modülün doğru versiyonunun yüklü olduğunu kontrol edin.",
+    "example_fix": "pip show paket_adi ile versiyon kontrolü yap"
+  },
+  {
+    "code": "RecursionError",
+    "cause": "Sonsuz özyineleme, maksimum derinlik aşıldı.",
+    "solution": "Base case ekleyin veya döngüsel yaklaşıma geçin.",
+    "example_fix": "sys.setrecursionlimit(2000) veya iteratif döngü kullan"
+  },
+  {
+    "code": "ZeroDivisionError",
+    "cause": "Sıfıra bölme işlemi yapıldı.",
+    "solution": "Bölmeden önce sıfır kontrolü yapın.",
+    "example_fix": "result = a / b if b != 0 else 0"
+  },
+  {
+    "code": "UnicodeDecodeError",
+    "cause": "Dosya UTF-8 dışında bir encoding ile yazılmış.",
+    "solution": "Dosya açılırken encoding parametresini belirtin.",
+    "example_fix": "open('dosya.txt', encoding='utf-8', errors='ignore')"
+  },
+  {
+    "code": "JSONDecodeError",
+    "cause": "Geçersiz JSON verisi parse edilmeye çalışıldı.",
+    "solution": "API yanıtının gerçekten JSON olduğunu kontrol edin.",
+    "example_fix": "try: data = response.json() \nexcept json.JSONDecodeError: data = {}"
+  },
+  {
+    "code": "SSLError: certificate verify failed",
+    "cause": "SSL sertifikası doğrulanamadı veya süresi dolmuş.",
+    "solution": "Sertifikayı güncelleyin veya CA sertifikasını ekleyin.",
+    "example_fix": "requests.get(url, verify='/path/to/cert.pem')"
+  },
+  {
+    "code": "OSError: No space left on device",
+    "cause": "Disk alanı doldu.",
+    "solution": "Gereksiz dosyaları silin veya disk boyutunu artırın.",
+    "example_fix": "df -h ile disk kullanımını kontrol et, du -sh * ile büyük klasörleri bul"
+  },
+  {
+    "code": "EMFILE: too many open files",
+    "cause": "Aynı anda çok fazla dosya açıldı.",
+    "solution": "Dosyaları kapatın veya sistem limitini artırın.",
+    "example_fix": "ulimit -n 65536 ile dosya limitini artır"
+  },
+  {
+    "code": "UnhandledPromiseRejection",
+    "cause": "Bir Promise hatası yakalanmadı.",
+    "solution": "async/await kullanılan her yere try/catch ekleyin.",
+    "example_fix": "async function run() { try { await islem() } catch(e) { console.error(e) } }"
+  },
+  {
+    "code": "RangeError: Maximum call stack size exceeded",
+    "cause": "Node.js'te sonsuz özyineleme (stack overflow).",
+    "solution": "Recursive fonksiyona base case ekleyin veya iteratif yapıya geçin.",
+    "example_fix": "setImmediate() ile async özyineleme yap"
+  },
+  {
+    "code": "EACCES: permission denied",
+    "cause": "Dosya veya sokete erişim izni yok.",
+    "solution": "Dosya izinlerini düzeltin veya sudo ile çalıştırın.",
+    "example_fix": "sudo chown -R $USER /klasor/yolu"
+  },
+  {
+    "code": "TypeError: is not a function",
+    "cause": "Fonksiyon olmayan bir değer çağrılmaya çalışıldı.",
+    "solution": "Import ifadesini ve değişken tipini kontrol edin.",
+    "example_fix": "typeof fn === 'function' && fn()"
+  },
+  {
+    "code": "MongoServerError: E11000 duplicate key",
+    "cause": "MongoDB'de unique index ihlali.",
+    "solution": "Kaydı eklemeden önce var olup olmadığını kontrol edin.",
+    "example_fix": "try { await User.create(data) } catch(e) { if(e.code===11000) res.status(409) }"
+  },
+  {
+    "code": "CastError: Cast to ObjectId failed",
+    "cause": "Geçersiz MongoDB ObjectId formatı.",
+    "solution": "ID'nin geçerli bir ObjectId olduğunu doğrulayın.",
+    "example_fix": "mongoose.Types.ObjectId.isValid(id) ile kontrol et"
+  },
+  {
+    "code": "PayloadTooLargeError",
+    "cause": "İstek gövdesi belirlenen sınırı aştı.",
+    "solution": "Body parser limitini artırın.",
+    "example_fix": "app.use(express.json({ limit: '10mb' }))"
+  },
+  {
+    "code": "Cannot set headers after they are sent",
+    "cause": "Express'te response ikinci kez gönderilmeye çalışıldı.",
+    "solution": "Her kod yoluna return ekleyin.",
+    "example_fix": "if (!res.headersSent) { return res.json(data) }"
+  },
+  {
+    "code": "DetachedInstanceError",
+    "cause": "SQLAlchemy session kapatıldıktan sonra nesneye erişildi.",
+    "solution": "Eager loading kullanın veya session'ı açık tutun.",
+    "example_fix": "db.query(User).options(joinedload(User.orders)).first()"
+  },
+  {
+    "code": "IntegrityError: UNIQUE constraint failed",
+    "cause": "Veritabanındaki unique kısıtlaması ihlal edildi.",
+    "solution": "Kayıt eklemeden önce varlık kontrolü yapın.",
+    "example_fix": "INSERT OR IGNORE INTO tablo VALUES (?)"
+  },
+  {
+    "code": "ForeignKeyViolation",
+    "cause": "Referans alınan kayıt veritabanında yok.",
+    "solution": "Önce bağımlı olduğu kaydı oluşturun.",
+    "example_fix": "user = User.create(data); order = Order.create({user_id: user.id})"
+  },
+  {
+    "code": "alembic: Target database is not up to date",
+    "cause": "Veritabanı migration'ları uygulanmamış.",
+    "solution": "Migration komutunu çalıştırın.",
+    "example_fix": "alembic upgrade head"
+  },
+  {
+    "code": "QueuePool limit overflow",
+    "cause": "Veritabanı bağlantı havuzu doldu.",
+    "solution": "Pool boyutunu artırın veya bağlantıları doğru kapatın.",
+    "example_fix": "create_engine(url, pool_size=20, max_overflow=40)"
+  },
+  {
+    "code": "Redis: ConnectionError 111",
+    "cause": "Redis servisi çalışmıyor.",
+    "solution": "Redis'i başlatın.",
+    "example_fix": "redis-server --daemonize yes"
+  },
+  {
+    "code": "RuntimeError: Working outside of application context",
+    "cause": "Flask uygulama bağlamı dışında işlem yapıldı.",
+    "solution": "with app.app_context() bloğunu kullanın.",
+    "example_fix": "with app.app_context(): db.create_all()"
+  },
+  {
+    "code": "422 Unprocessable Entity",
+    "cause": "FastAPI/Pydantic model doğrulama hatası.",
+    "solution": "İstek gövdesindeki alanları ve tiplerini kontrol edin.",
+    "example_fix": "class Model(BaseModel): name: str; age: Optional[int] = None"
+  },
+  {
+    "code": "CSRF verification failed",
+    "cause": "Django CSRF token eksik veya geçersiz.",
+    "solution": "Formlara CSRF token ekleyin veya API için csrf_exempt kullanın.",
+    "example_fix": "@csrf_exempt def api_view(request): ..."
+  },
+  {
+    "code": "Hydration Error (Next.js)",
+    "cause": "Server ve client render çıktısı farklı.",
+    "solution": "Browser-only kodları useEffect içine alın.",
+    "example_fix": "const Component = dynamic(() => import('./BrowserOnly'), { ssr: false })"
+  },
+  {
+    "code": "Maximum update depth exceeded (React)",
+    "cause": "React bileşeni sonsuz döngüde render ediyor.",
+    "solution": "useEffect dependency array'ini düzeltin.",
+    "example_fix": "useEffect(() => { setData(result) }, [id])"
+  },
+  {
+    "code": "ENV variable is undefined",
+    "cause": ".env dosyası yüklenmemiş veya değişken adı yanlış.",
+    "solution": "dotenv kütüphanesini yükleyin ve .env dosyasını kontrol edin.",
+    "example_fix": "Python: load_dotenv() | Node.js: require('dotenv').config()"
+  },
+  {
+    "code": "Docker: bind address already in use",
+    "cause": "Docker container aynı host portunu bağlamaya çalışıyor.",
+    "solution": "Farklı bir host portu kullanın.",
+    "example_fix": "docker run -p 3001:3000 myapp"
+  },
+  {
+    "code": "OOMKilled (Kubernetes)",
+    "cause": "Container bellek limitini aştı.",
+    "solution": "Memory limitini artırın veya bellek sızıntısını düzeltin.",
+    "example_fix": "resources: limits: memory: '512Mi'"
+  },
+  {
+    "code": "CrashLoopBackOff (Kubernetes)",
+    "cause": "Pod sürekli başlayıp kapanıyor.",
+    "solution": "Pod loglarını inceleyerek asıl hatayı bulun.",
+    "example_fix": "kubectl logs <pod-name> --previous"
+  },
+  {
+    "code": "DeadlockError",
+    "cause": "İki veritabanı işlemi birbirini bekliyor.",
+    "solution": "Transaction sırasını standartlaştırın veya retry mekanizması ekleyin.",
+    "example_fix": "for attempt in range(3): try: db.commit(); break \nexcept DeadlockError: time.sleep(2**attempt)"
+  },
+  {
+    "code": "CircularDependency (Import)",
+    "cause": "İki modül birbirini import ediyor.",
+    "solution": "Import'u fonksiyon içine taşıyın (lazy import).",
+    "example_fix": "def get_service(): from .service import Service; return Service()"
+  },
+  {
+    "code": "RuntimeError: dictionary changed size during iteration",
+    "cause": "Döngü sırasında dict'e eleman eklendi/silindi.",
+    "solution": "Dict'in kopyası üzerinde iterasyon yapın.",
+    "example_fix": "for key in list(my_dict.keys()): del my_dict[key]"
+  },
+  {
+    "code": "TypeError: Object of type datetime is not JSON serializable",
+    "cause": "datetime nesnesi JSON'a çevrilemiyor.",
+    "solution": "isoformat() ile stringe dönüştürün veya custom encoder kullanın.",
+    "example_fix": "json.dumps(data, default=str)"
+  },
+  {
+    "code": "SQLite: check_same_thread",
+    "cause": "SQLite farklı thread'den erişilmeye çalışıldı.",
+    "solution": "check_same_thread=False parametresini ekleyin.",
+    "example_fix": "create_engine('sqlite:///test.db', connect_args={'check_same_thread': False})"
+  },
+  {
+    "code": "asyncio: Task attached to a different loop",
+    "cause": "Farklı asyncio event loop'larında task oluşturuldu.",
+    "solution": "asyncio.run() kullanın, loop'ları karıştırmayın.",
+    "example_fix": "asyncio.run(main())"
+  },
+  {
+    "code": "Webpack Module build failed",
+    "cause": "Webpack derleme hatası, genellikle eksik paket.",
+    "solution": "node_modules'u temizleyip yeniden yükleyin.",
+    "example_fix": "rm -rf node_modules && npm install && npm run build"
+  },
+  {
+    "code": "ERR_INVALID_URL",
+    "cause": "Geçersiz URL formatı (protokol eksik vb.).",
+    "solution": "URL'yi validate edin.",
+    "example_fix": "try { new URL(inputUrl) } catch(e) { console.error('Geçersiz URL') }"
+  },
+  {
+    "code": "ESOCKETTIMEDOUT",
+    "cause": "HTTP isteği zaman aşımına uğradı.",
+    "solution": "Timeout süresini artırın veya retry mekanizması ekleyin.",
+    "example_fix": "axios.get(url, { timeout: 10000 })"
+  },
+  {
+    "code": "Sequelize: Transaction rollback error",
+    "cause": "Transaction zaten tamamlanmış durumdayken rollback yapılmaya çalışıldı.",
+    "solution": "Transaction state'ini kontrol ederek yönetin.",
+    "example_fix": "const t = await sequelize.transaction(); try { await t.commit() } catch { await t.rollback() }"
+  },
+  {
+    "code": "Python GIL bottleneck",
+    "cause": "GIL nedeniyle CPU yoğun işler thread ile hızlanamıyor.",
+    "solution": "multiprocessing modülünü kullanın.",
+    "example_fix": "from multiprocessing import Pool; Pool(4).map(islem, veri_listesi)"
+  },
+  {
+    "code": "N+1 Query Problem",
+    "cause": "Her kayıt için ayrı veritabanı sorgusu yapılıyor.",
+    "solution": "JOIN veya eager loading ile tek sorguda çekin.",
+    "example_fix": "db.query(User).options(joinedload(User.orders)).all()"
+  },
+  {
+    "code": "WebhookSignatureError",
+    "cause": "Webhook imzası doğrulanamadı.",
+    "solution": "Secret key'i ve raw body'yi kontrol edin.",
+    "example_fix": "app.post('/webhook', express.raw({type:'application/json'}), handler)"
+  },
+  {
+    "code": "PathTraversalVulnerability",
+    "cause": "Kullanıcı girdisi dosya yoluna direkt eklendi (../etc/passwd gibi).",
+    "solution": "Dosya yolunu normalize edip base dir dışına çıkılmadığını kontrol edin.",
+    "example_fix": "safe = os.path.realpath(os.path.join(base, user_input)); assert safe.startswith(base)"
+  },
+  {
+    "code": "XSS Vulnerability",
+    "cause": "Kullanıcı girdisi HTML'e direkt eklendi.",
+    "solution": "innerHTML yerine textContent kullanın veya DOMPurify ile temizleyin.",
+    "example_fix": "element.textContent = userInput"
+  },
+  {
+    "code": "SQL Injection Risk",
+    "cause": "Kullanıcı girdisi SQL sorgusuna direkt eklendi.",
+    "solution": "Parametreli sorgu veya ORM kullanın.",
+    "example_fix": "cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))"
+  },
+  {
+    "code": "npm audit: vulnerabilities found",
+    "cause": "Kullanılan npm paketlerinde güvenlik açığı var.",
+    "solution": "Güvenli versiyona güncelleyin.",
+    "example_fix": "npm audit fix"
+  },
+  {
+    "code": "pip-audit: vulnerabilities found",
+    "cause": "Kullanılan Python paketlerinde güvenlik açığı var.",
+    "solution": "Güvenli versiyona güncelleyin.",
+    "example_fix": "pip install pip-audit && pip-audit"
+  },
+  {
+    "code": "Log Injection Risk",
+    "cause": "Sanitize edilmemiş kullanıcı girdisi log dosyasına yazıldı.",
+    "solution": "Structured logging kullanın, girdileri temizleyin.",
+    "example_fix": "logger.info('User action', extra={'user_id': user_id})"
+  },
+  {
+    "code": "Buffer() deprecated (Node.js)",
+    "cause": "Eski ve güvenli olmayan Buffer API kullanılıyor.",
+    "solution": "Buffer.from() kullanın.",
+    "example_fix": "Buffer.from(string, 'utf-8')"
+  },
+  {
+    "code": "DeprecationWarning (Python)",
+    "cause": "Kullanılmayan eski bir API veya fonksiyon çağrıldı.",
+    "solution": "Yeni API'ye geçin, kütüphane changelog'unu inceleyin.",
+    "example_fix": "import warnings; warnings.filterwarnings('error', category=DeprecationWarning)"
+  },
+  {
+    "code": "FATAL ERROR: heap out of memory",
+    "cause": "Node.js heap belleği tükendi.",
+    "solution": "Heap limitini artırın ve bellek sızıntısını giderin.",
+    "example_fix": "node --max-old-space-size=4096 app.js"
+  },
+  {
+    "code": "pickle.UnpicklingError",
+    "cause": "Pickle dosyası bozuk veya farklı Python versiyonundan.",
+    "solution": "JSON veya joblib kullanın.",
+    "example_fix": "import joblib; joblib.dump(model, 'model.pkl')"
+  },
+  {
+    "code": "numpy: shape mismatch",
+    "cause": "NumPy dizisi boyutları uyuşmuyor.",
+    "solution": "reshape() ile boyutları hizalayın.",
+    "example_fix": "a.reshape(3,1) + b.reshape(1,4)"
+  },
+  {
+    "code": "CI/CD: insufficient permission",
+    "cause": "Pipeline'ın deploy yetkisi yok.",
+    "solution": "Secret ve deploy key'leri kontrol edin.",
+    "example_fix": "env: API_KEY: ${{ secrets.API_KEY }} (GitHub Actions)"
+  },
+  {
+    "code": "AggregateError: All promises were rejected",
+    "cause": "Promise.all içindeki tüm işlemler başarısız oldu.",
+    "solution": "Promise.allSettled kullanarak hataları ayrı ayrı yönetin.",
+    "example_fix": "const results = await Promise.allSettled(promises)"
+  },
+  {
+    "code": "ServiceUnavailable: downstream timeout",
+    "cause": "Bağımlı microservis yanıt vermedi.",
+    "solution": "Circuit breaker pattern uygulayın ve fallback değer döndürün.",
+    "example_fix": "if circuit_breaker.is_open(): return fallback_response()"
+  },
+  {
+    "code": "Race Condition",
+    "cause": "Eş zamanlı işlemler veri tutarsızlığına yol açıyor.",
+    "solution": "Atomik işlem veya distributed lock kullanın.",
+    "example_fix": "with redis_lock('kaynak:123'): value = db.get(); db.set(value+1)"
+  },
+  {
+    "code": "Graceful Shutdown Error",
+    "cause": "Uygulama bekleyen istekler tamamlanmadan kapandı.",
+    "solution": "SIGTERM sinyalini yakalayarak bağlantıları düzgün kapatın.",
+    "example_fix": "process.on('SIGTERM', async () => { await server.close(); process.exit(0) })"
+  },
+  {
+    "code": "UnicodeEncodeError: ascii codec",
+    "cause": "Türkçe veya özel karakter ASCII olarak encode edilmeye çalışıldı.",
+    "solution": "UTF-8 kullanın.",
+    "example_fix": "PYTHONIOENCODING=utf-8 veya open(file, encoding='utf-8')"
+  },
+  {
+    "code": "ERR_HTTP_HEADERS_SENT",
+    "cause": "Express'te response gönderildikten sonra header değiştirilmeye çalışıldı.",
+    "solution": "Her return noktasına return ekleyin.",
+    "example_fix": "if (!res.headersSent) { res.send(data) }"
+  },
+  {
+    "code": "ReconnectStorm (WebSocket)",
+    "cause": "WebSocket sürekli bağlanıp kopuyor.",
+    "solution": "Exponential backoff ile yeniden bağlanma stratejisi uygulayın.",
+    "example_fix": "delay = Math.min(delay * 2, 30000); setTimeout(connect, delay)"
+  },
+  {
+    "code": "EventLoop Blocking (Node.js)",
+    "cause": "Senkron ve uzun süren bir işlem event loop'u bloke ediyor.",
+    "solution": "Async API kullanın veya Worker Threads'e taşıyın.",
+    "example_fix": "const { Worker } = require('worker_threads')"
+  },
+  {
+    "code": "ThreadSafetyError",
+    "cause": "Birden fazla thread aynı veriye lock olmadan erişiyor.",
+    "solution": "threading.Lock() kullanın.",
+    "example_fix": "with threading.Lock(): shared_data['key'] = value"
+  },
+  {
+    "code": "StopIteration",
+    "cause": "Python iterator veya generator tükendi, next() çok fazla çağrıldı.",
+    "solution": "for döngüsü kullanın veya try/except StopIteration ekleyin.",
+    "example_fix": "try: val = next(iterator) \nexcept StopIteration: val = None"
+  }
+]
