@@ -5,6 +5,7 @@ import { Error500Strategy } from '../../infrastructure/strategies/error500.strat
 import { Error429Strategy } from '../../infrastructure/strategies/error429.strategy';
 import { Error401Strategy } from '../../infrastructure/strategies/error401.strategy';
 import { TerminalMonitorService } from '../../infrastructure/services/terminal-monitor.service'; // SCRUM-36
+import { PathExtractorService } from '../../infrastructure/services/path-extractor.service'; // SCRUM-37
 import type { IChaosRepository } from '../../domain/interfaces/chaos-repository.interface';
 
 @Controller('chaos')
@@ -15,15 +16,12 @@ export class ChaosController {
     private readonly error500: Error500Strategy,
     private readonly error429: Error429Strategy,
     private readonly error401: Error401Strategy,
-    private readonly terminalMonitor: TerminalMonitorService, // SCRUM-36 Enjeksiyonu
+    private readonly terminalMonitor: TerminalMonitorService, // SCRUM-36
+    private readonly pathExtractor: PathExtractorService, // SCRUM-37
     @Inject('IChaosRepository')
     private readonly chaosRepository: IChaosRepository,
   ) {}
 
-  /**
-   * GET /chaos/history
-   * Geçmiş deneyleri listeler.
-   */
   @Get('history')
   async getHistory() {
     const logs = await this.chaosRepository.findAll();
@@ -39,10 +37,6 @@ export class ChaosController {
     }));
   }
 
-  /**
-   * POST /chaos/trigger
-   * Kaos deneyini tetikler.
-   */
   @Post('trigger')
   async trigger(@Body() body: { type: string; target?: string; params?: any }) {
     const typeUpper = body.type?.toUpperCase();
@@ -71,23 +65,32 @@ export class ChaosController {
   }
 
   /**
-   * POST /chaos/monitor (SCRUM-36 Özel)
-   * Belirli bir terminal komutunu izlemeyi başlatır.
-   * Örnek Body: { "command": "ls", "args": ["-la"] }
+   * POST /chaos/monitor (SCRUM-36)
+   * Terminal çıktılarını dinlemeyi başlatır.
    */
   @Post('monitor')
   async startMonitor(@Body() body: { command: string; args?: string[] }) {
     this.terminalMonitor.monitorCommand(body.command, body.args || []);
     return {
       success: true,
-      message: `SCRUM-36: '${body.command}' terminal çıktısı yakalanıyor.`,
+      message: `SCRUM-36: '${body.command}' izleniyor.`,
     };
   }
 
   /**
-   * GET /chaos/history/clear
-   * Geçmişi temizler.
+   * POST /chaos/parse-logs (SCRUM-37)
+   * Gönderilen log metni içindeki dosya yollarını ayıklar.
    */
+  @Post('parse-logs')
+  async parseLogs(@Body() body: { logs: string }) {
+    const paths = this.pathExtractor.extractPaths(body.logs);
+    return {
+      success: true,
+      detectedPaths: paths,
+      count: paths.length,
+    };
+  }
+
   @Get('history/clear')
   async clearHistory() {
     await this.chaosRepository.clearLogs();
