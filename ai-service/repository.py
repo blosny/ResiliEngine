@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from models import AnalysisResult
-
+# SCRUM-29: Repository Mapping Logic
+# AI'dan gelen analiz verilerini veritabanı şemasına (models.py) hatasız eşler.
 class AnalysisRepository:
     def __init__(self, db: Session):
         self.db = db
