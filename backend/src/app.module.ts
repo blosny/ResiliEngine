@@ -23,6 +23,7 @@ import { Error500Strategy } from './infrastructure/strategies/error500.strategy'
 import { Error429Strategy } from './infrastructure/strategies/error429.strategy';
 import { Error401Strategy } from './infrastructure/strategies/error401.strategy';
 import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor';
+import { TerminalMonitorService } from './infrastructure/services/terminal-monitor.service';
 
 @Module({
   imports: [
@@ -39,7 +40,8 @@ import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor'
       // Render veritabanına dışarıdan veya Render içinden bağlanırken SSL gereklidir
       ssl:
         process.env.DATABASE_URL &&
-        (process.env.DATABASE_URL.includes('render.com') || process.env.DATABASE_URL.includes('frankfurt-postgres'))
+        (process.env.DATABASE_URL.includes('render.com') ||
+          process.env.DATABASE_URL.includes('frankfurt-postgres'))
           ? { rejectUnauthorized: false }
           : false,
     }),
@@ -55,9 +57,10 @@ import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor'
     Error500Strategy,
     Error429Strategy,
     Error401Strategy,
+    TerminalMonitorService,
     { provide: 'IUserRepository', useClass: TypeOrmUserRepository },
     { provide: 'IChaosRepository', useClass: TypeOrmChaosRepository },
     { provide: APP_INTERCEPTOR, useClass: ChaosInterceptor },
   ],
 })
-export class AppModule { }
+export class AppModule {}
