@@ -38,6 +38,10 @@ services:
       - "8000:8000"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=resiliengine_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password123}
+      - POSTGRES_DB=resiliengine_db
 
   frontend:
     build: ./frontend
@@ -47,7 +51,7 @@ services:
     depends_on:
       - backend
     environment:
-      - VITE_API_URL=https://resiliengine-backend.onrender.com
+      - VITE_API_URL=http://localhost:3000
 
 volumes:
   postgres_data:

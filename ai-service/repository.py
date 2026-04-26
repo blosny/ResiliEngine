@@ -16,3 +16,6 @@ class AnalysisRepository:
         self.db.commit()
         self.db.refresh(db_record)
         return db_record
+
+    def get_analysis_by_log(self, log_content: str):
+        return self.db.query(AnalysisResult).filter(AnalysisResult.log_content == log_content).order_by(AnalysisResult.id.desc()).first()
