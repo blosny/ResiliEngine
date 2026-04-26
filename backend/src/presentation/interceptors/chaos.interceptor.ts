@@ -15,11 +15,8 @@ export class ChaosInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<any>> {
-    // ChaosEngineService içindeki metod ismini 'run' yaptığımız için burada da 'run' diyoruz.
-    await this.chaosEngine.run({
-      target: context.getClass().name + '.' + context.getHandler().name,
-    });
-
+    // Stage 4: Bazı isteklerde kaos motorunu tetikle
+    // await this.chaosEngine.executeStrategy({ target: 'Global Interceptor' });
     return next.handle();
   }
 }

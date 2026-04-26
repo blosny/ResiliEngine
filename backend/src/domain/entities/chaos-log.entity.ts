@@ -8,23 +8,26 @@ import {
 @Entity('chaos_logs')
 export class ChaosLog {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  type: string;
+  type!: string;
 
   @Column()
-  target: string;
+  target!: string;
 
   @Column()
-  status: string;
+  status!: string;
 
   @Column({ type: 'int', nullable: true })
-  duration: number;
+  duration?: number;
 
-  @Column({ type: 'text', nullable: true }) // nullable: true olduğundan emin ol
+  @Column({ type: 'text', nullable: true })
   errorDetails?: string;
 
+  @Column({ type: 'text', nullable: true })
+  aiRecommendation?: string;
+
   @CreateDateColumn()
-  timestamp: Date;
+  timestamp!: Date;
 }
