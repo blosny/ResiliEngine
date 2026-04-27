@@ -4,7 +4,7 @@
     "@nestjs/typeorm": "^11.0.0",
     "axios": "^1.13.6",
     "pg": "^8.20.0",
-    "typeorm": "^0.3.28"
+    "typeorm": "^0.2.41"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

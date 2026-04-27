@@ -4,6 +4,8 @@ import { LatencyStrategy } from '../../infrastructure/strategies/latency.strateg
 import { Error500Strategy } from '../../infrastructure/strategies/error500.strategy';
 import { Error429Strategy } from '../../infrastructure/strategies/error429.strategy';
 import { Error401Strategy } from '../../infrastructure/strategies/error401.strategy';
+import { TerminalMonitorService } from '../../infrastructure/services/terminal-monitor.service'; // SCRUM-36
+import { PathExtractorService } from '../../infrastructure/services/path-extractor.service'; // SCRUM-37
 import type { IChaosRepository } from '../../domain/interfaces/chaos-repository.interface';
 
 @Controller('chaos')
@@ -14,6 +16,8 @@ export class ChaosController {
     private readonly error500: Error500Strategy,
     private readonly error429: Error429Strategy,
     private readonly error401: Error401Strategy,
+    private readonly terminalMonitor: TerminalMonitorService, // SCRUM-36
+    private readonly pathExtractor: PathExtractorService, // SCRUM-37
     @Inject('IChaosRepository')
     private readonly chaosRepository: IChaosRepository,
   ) {}
@@ -37,7 +41,6 @@ export class ChaosController {
   async trigger(@Body() body: { type: string; target?: string; params?: any }) {
     const typeUpper = body.type?.toUpperCase();
 
-    // Strateji seçimi
     switch (typeUpper) {
       case 'LATENCY':
         this.chaosService.setStrategy(this.latency);
@@ -59,6 +62,33 @@ export class ChaosController {
       target: body.target || 'System',
       params: body.params,
     });
+  }
+
+  /**
+   * POST /chaos/monitor (SCRUM-36)
+   * Terminal çıktılarını dinlemeyi başlatır.
+   */
+  @Post('monitor')
+  async startMonitor(@Body() body: { command: string; args?: string[] }) {
+    this.terminalMonitor.monitorCommand(body.command, body.args || []);
+    return {
+      success: true,
+      message: `SCRUM-36: '${body.command}' izleniyor.`,
+    };
+  }
+
+  /**
+   * POST /chaos/parse-logs (SCRUM-37)
+   * Gönderilen log metni içindeki dosya yollarını ayıklar.
+   */
+  @Post('parse-logs')
+  async parseLogs(@Body() body: { logs: string }) {
+    const paths = this.pathExtractor.extractPaths(body.logs);
+    return {
+      success: true,
+      detectedPaths: paths,
+      count: paths.length,
+    };
   }
 
   @Get('history/clear')

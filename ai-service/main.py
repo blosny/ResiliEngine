@@ -1,15 +1,27 @@
 import os
 import re
 import json
+import requests
 import uvicorn
 import asyncio
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+<<<<<<< HEAD
+=======
 import httpx
 from dotenv import load_dotenv
 from google import genai
+>>>>>>> da1047ed93a68a7ea10f513eb0702f2aa16b17db
 from sqlalchemy.orm import Session
+# SCRUM-39: Akıllı Karar Mekanizması - Logları önce yerel Knowledge Base'de arar, 
+# eşleşme bulamazsa Yerel AI (Ollama) servisine danışır.
+# Veritabanı importları
+from database import engine, get_db
+import models
+from repository import AnalysisRepository
+
+# Veritabanında tabloları otomatik oluştu
 
 # Database imports
 from database import engine, get_db
@@ -24,7 +36,70 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ResiliEngine - AI Analysis Service")
 
+<<<<<<< HEAD
+class LogRequest(BaseModel):
+    log_content: str
+
+def load_knowledge_base():
+    try:
+        with open("error_knowledge_base.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+@app.post("/analyze")
+async def analyze_logs(request: LogRequest, db: Session = Depends(get_db)):
+    log_text = request.log_content
+
+    # 1. ADIM: HIZLI ARAMA (Knowledge Base Kontrolü)
+    kb_data = load_knowledge_base()
+    for entry in kb_data:
+        if entry["code"] in log_text or entry["cause"] in log_text:
+            # Bulunduysa anında veritabanına kaydet ve dön
+            repo = AnalysisRepository(db)
+            repo.save_analysis(
+                log_content=log_text,
+                analysis=entry["cause"],
+                recommendation=entry["solution"]
+            )
+            return {
+                "source": "knowledge_base",
+                "analysis": entry["cause"],
+                "recommendation": entry["solution"]
+            }
+
+    # 2. ADIM: YEREL AI (Ollama - Phi3) DEVREYE GİRER
+    prompt = f"""
+    Sen bir Yazılım Mimarı ve Kaos Mühendisliği uzmanısın. Aşağıdaki logu Türkçe analiz et.
+    LOG: {log_text}
+    Yanıtı SADECE şu JSON formatında ver:
+    {{
+     "analysis": "Hatanın kısa nedeni",
+     "recommendation": "Çözüm önerisi"
+    }}
+    """
+
+    try:
+        # Yerel Ollama Konteynerine İstek At
+        response = requests.post("http://localhost:11434/api/generate", json={
+            "model": "phi3:mini",
+            "prompt": prompt,
+            "stream": False
+        })
+        response.raise_for_status()
+        
+        ai_text = response.json().get("response", "")
+        
+        # HATA ÖNLEME: AI cevabının etrafındaki markdown taglerini temizle
+        clean_text = ai_text.replace("```json", "").replace("```", "").strip()
+        result = json.loads(clean_text)
+
+        # Veritabanına kaydet
+        repo = AnalysisRepository(db)
+# API KEY
+=======
 # Gemini API
+>>>>>>> da1047ed93a68a7ea10f513eb0702f2aa16b17db
 api_key = os.getenv("GEMINI_API_KEY")
 gemini_client = None
 
@@ -225,12 +300,27 @@ async def analyze_logs(request: LogRequest, db: Session = Depends(get_db)):
     # 5. Veritabanına Kaydet
     try:
         repo.save_analysis(
-            log_content=request.log_content,
+            log_content=log_text,
             analysis=result["analysis"],
             recommendation=result["recommendation"],
         )
+<<<<<<< HEAD
+
+        result["source"] = "local_ai"
+        return result
+
+    except json.JSONDecodeError:
+        # AI düzgün JSON dönmezse (SCRUM-22 Kararlılık)
+        raise HTTPException(status_code=500, detail="Yapay zeka geçerli bir JSON formatı döndüremedi.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Yerel AI veya Veritabanı Hatası: {str(e)}")
+     #SCRUM-22: Kararlilik kontrolleri ve DB mapping tamamlandi
+    except Exception as db_e:
+        print(f"DB Kayıt Hatası: {db_e}")
+=======
     except Exception as e:
         print(f"DB Kayıt Hatası: {e}")
+>>>>>>> da1047ed93a68a7ea10f513eb0702f2aa16b17db
 
     result["mode"] = mode
     return JSONResponse(content=result, media_type="application/json; charset=utf-8")
