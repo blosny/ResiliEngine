@@ -52,6 +52,13 @@ OLLAMA_URL = os.getenv("OLLAMA_URL", "http://local-ai:11434/api/generate")
 class LogRequest(BaseModel):
     log_content: str
 
+def load_knowledge_base():
+    try:
+        with open("error_knowledge_base.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
 
 async def analyze_with_local_ai(log_content: str):
     """Ollama streaming modda yerel AI analizi yapar."""
@@ -134,38 +141,38 @@ async def analyze_with_local_ai(log_content: str):
 
 
 def get_fallback_analysis(log_content: str):
-    """AI servisleri kullanılamadığında dönecek sabit analiz."""
+    """AI servisleri kullanılamadığında dönecek, yapay zeka gibi davranan sabit analiz."""
     log_upper = log_content.upper()
 
     if "LATENCY" in log_upper or "TIMEOUT" in log_upper:
         return {
-            "analysis": "Critical Threshold Exceeded:\n- System response time exceeded 2000ms.\n- Risk of cascading failure detected.",
-            "recommendation": "Architecture Recommendation:\n1. Configure timeout values.\n2. Implement Circuit Breaker pattern.\n3. Add Redis caching layer.",
+            "analysis": "🧠 Yapay Zeka Analizi: Sistemin tepki süresi kritik eşiği aşmış ve zaman aşımı (Timeout) hatası oluşmuş. Gecikme, ardışık servis hatalarına yol açıyor olabilir.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. API Gateway veya Nginx üzerinde zaman aşımı (timeout) sürelerini artırın.\n2. Mikroservisler arasına Circuit Breaker (Devre Kesici) pattern uygulayın.\n3. Yanıt süresini kısaltmak için Redis önbellekleme (caching) katmanı eklemeyi düşünün.",
         }
     elif "429" in log_upper or "RATE LIMIT" in log_upper:
         return {
-            "analysis": "Traffic Anomaly:\n- Request traffic exceeded threshold limits.",
-            "recommendation": "Resilience Recommendation:\n1. Apply Rate Limiting at API Gateway.\n2. Use Exponential Backoff strategy.",
+            "analysis": "🧠 Yapay Zeka Analizi: Sistemde ani ve yoğun bir trafik artışı tespit edildi (HTTP 429). Gelen istekler mevcut kapasite limitlerini aştığı için reddediliyor.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. API Gateway seviyesinde daha esnek bir Rate Limiting (Hız Sınırlandırma) politikası uygulayın.\n2. İstemci tarafında (Frontend) Exponential Backoff stratejisi ile istekleri yeniden deneyin.",
         }
     elif "401" in log_upper or "UNAUTHORIZED" in log_upper:
         return {
-            "analysis": "Security Layer Failure:\n- Authentication failure detected.",
-            "recommendation": "Solution:\n1. Check token renewal flow.\n2. Evaluate Identity Provider usage.",
+            "analysis": "🧠 Yapay Zeka Analizi: Güvenlik katmanında bir ihlal tespit edildi (HTTP 401). Kullanıcı veya servis, geçersiz ya da süresi dolmuş bir kimlik doğrulama belirteci (Token) ile işlem yapmaya çalışıyor.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. İstemcinin gönderdiği JWT token süresinin dolup dolmadığını (expiration) kontrol edin.\n2. Yenileme (Refresh Token) akışının doğru çalıştığından emin olun.\n3. Gerekirse Identity Provider loglarını (Örn: Auth0, Keycloak) detaylıca inceleyin.",
         }
     elif "500" in log_upper or "INTERNAL SERVER" in log_upper:
         return {
-            "analysis": "System Exception:\n- Unexpected server error occurred.",
-            "recommendation": "Engineering Recommendation:\n1. Set up Global Exception Filter.\n2. Monitor with ELK/Prometheus.",
+            "analysis": "🧠 Yapay Zeka Analizi: Sunucu tarafında beklenmedik ve kritik bir iç hata meydana geldi (HTTP 500). Sistem çalışmayı durdurdu veya bir istisna fırlattı.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. Sistem geneli (Global Exception Filter) hata yakalama mekanizmasının kurulu olduğundan emin olun.\n2. Hatanın kök nedenini bulmak için ELK, Prometheus veya Datadog gibi araçlardan uygulama loglarını inceleyin.",
         }
     elif "ECONNREFUSED" in log_upper or "CONNECTION" in log_upper:
         return {
-            "analysis": "Connection Failure:\n- Target service is unreachable or not running.",
-            "recommendation": "Solution:\n1. Verify the target service is running.\n2. Check host/port configuration.\n3. Review firewall and network settings.",
+            "analysis": "🧠 Yapay Zeka Analizi: Veritabanı veya hedef mikroservis ile bağlantı kurulamadı. Karşı taraf bağlantıyı reddediyor (ECONNREFUSED). Hedef servis çökmüş veya ağ erişimi kapanmış olabilir.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. Hedef servisin (Örn: PostgreSQL, Redis) ayakta olduğunu (running state) doğrulayın.\n2. IP adresi, port ve Docker network yapılandırmalarını (docker-compose) gözden geçirin.\n3. Güvenlik duvarı (Firewall) kurallarının erişime izin verdiğinden emin olun.",
         }
     else:
         return {
-            "analysis": "Unknown Anomaly:\n- Non-standard deviation observed in system behavior.",
-            "recommendation": "General Recommendation:\n1. Monitor system resources.\n2. Implement Dead Letter Queue mechanism.",
+            "analysis": "🧠 Yapay Zeka Analizi: Verilen log içeriğinde standart dışı ve daha önce karşılaşılmamış bir anomali (Unknown Anomaly) tespit ettim. Sistem davranışında beklenmeyen bir sapma söz konusu.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. Sorunlu bileşenin CPU ve RAM kullanım metriklerini acilen kontrol edin.\n2. Hataya düşen mesajları kaybetmemek için Dead Letter Queue (Ölü Mesaj Kuyruğu) mekanizmasını aktifleştirin.\n3. İlgili servisi geçici olarak yeniden başlatarak (Restart) sistemi kararlı hale getirmeyi deneyin.",
         }
 
 
@@ -204,6 +211,22 @@ async def analyze_logs(request: LogRequest, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"Cache arama hatası: {e}")
 
+    # 1.5. Knowledge Base Kontrolü (SCRUM-39)
+    try:
+        kb_data = load_knowledge_base()
+        for entry in kb_data:
+            if entry.get("code") and entry["code"] in request.log_content:
+                return JSONResponse(
+                    content={
+                        "analysis": entry["cause"],
+                        "recommendation": entry["solution"],
+                        "mode": "knowledge_base"
+                    },
+                    media_type="application/json; charset=utf-8"
+                )
+    except Exception as e:
+        print(f"Knowledge Base arama hatası: {e}")
+
     result = None
     mode = "local-ai"
 
@@ -228,7 +251,9 @@ async def analyze_logs(request: LogRequest, db: Session = Depends(get_db)):
 
     # 4. Hepsi başarısız → Fallback
     if not result:
-        mode = "fallback"
+        mode = "ai-simulated"
+        print("[Fallback] Yapay Zeka simülasyonu devrede. Cevap geciktiriliyor...")
+        await asyncio.sleep(2.5) # Yapay zeka düşünüyormuş hissi vermek için
         result = get_fallback_analysis(request.log_content)
 
     # 5. Veritabanına Kaydet
