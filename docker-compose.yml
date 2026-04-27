@@ -64,7 +64,6 @@ services:
     #           count: 1
     #           capabilities: [gpu]
 
-
   frontend:
     build: ./frontend
     container_name: resiliengine_frontend
