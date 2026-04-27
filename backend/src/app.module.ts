@@ -43,6 +43,11 @@ import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor'
       password: process.env.DB_PASSWORD || 'password123',
       database: process.env.DB_NAME || 'resiliengine_db',
       ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+      extra: process.env.DATABASE_URL ? {
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      } : undefined,
       entities: [User, ChaosLog],
       synchronize: true,
     }),
