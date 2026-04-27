@@ -96,4 +96,43 @@ export class ChaosController {
     await this.chaosRepository.clearLogs();
     return { success: true };
   }
+
+  /**
+   * POST /chaos/terminal-error
+   * guard.js tarafından yakalanan gerçek terminal hatalarını alır, kaydeder ve AI'a yollar.
+   */
+  @Post('terminal-error')
+  async terminalError(@Body() body: { log: string }) {
+    // 1. Veritabanına Log Kaydet
+    const log = await this.chaosRepository.createLog({
+      type: 'Terminal Monitor',
+      target: 'Localhost',
+      status: 'FAILED',
+      duration: 0,
+      errorDetails: body.log,
+    });
+
+    try {
+      // 2. AI Servisine Gönder
+      const aiClient = (this.chaosService as any).aiClient; // Reflection or direct access if possible
+      const aiResponse = await aiClient.sendLogForAnalysis({
+        log_content: body.log,
+      });
+
+      // 3. AI Yanıtını Güncelle
+      if (aiResponse && aiResponse.recommendation) {
+        await this.chaosRepository.updateLog(log.id, {
+          aiRecommendation: aiResponse.recommendation,
+        });
+      } else {
+        await this.chaosRepository.updateLog(log.id, {
+          aiRecommendation: `[BİLGİ] AI Analizi tamamlanamadı (veya fallback devrede). Analiz: ${aiResponse?.analysis || ''}`,
+        });
+      }
+    } catch (e) {
+      console.error('Terminal Error AI İşlemi Başarısız:', e);
+    }
+
+    return { success: true, logId: log.id };
+  }
 }

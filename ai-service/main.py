@@ -63,17 +63,17 @@ def load_knowledge_base():
 async def analyze_with_local_ai(log_content: str):
     """Ollama streaming modda yerel AI analizi yapar."""
     system_message = (
-        "You are an expert software architect specializing in Node.js, TypeScript, "
-        "and distributed systems. You analyze error logs and provide clear, actionable solutions. "
-        "Always respond in English. Be concise and specific."
+        "Sen Node.js, TypeScript ve dağıtık sistemler konusunda uzman bir yazılım mimarısın. "
+        "Hata loglarını analiz eder ve net, uygulanabilir çözümler sunarsın. "
+        "HER ZAMAN TÜRKÇE (Turkish) cevap vermelisin. Yanıtların kısa, öz ve teknik açıdan isabetli olmalıdır."
     )
 
     prompt = (
-        f"ERROR LOG:\n{log_content}\n\n"
-        f"INSTRUCTIONS:\n"
-        f"1. First, write a short paragraph explaining the ROOT CAUSE of this error.\n"
-        f"2. Then, write a numbered list of SOLUTION STEPS to fix it.\n"
-        f"Keep your response under 200 words."
+        f"HATA LOGU:\n{log_content}\n\n"
+        f"TALİMATLAR:\n"
+        f"1. İlk olarak, bu hatanın KÖK NEDENİNİ (Root Cause) açıklayan kısa bir paragraf yaz (Başlık: KÖK NEDEN ANALİZİ).\n"
+        f"2. Sonra, hatayı çözmek için numaralandırılmış ÇÖZÜM ADIMLARI listesi ver (Başlık: ÇÖZÜM ADIMLARI).\n"
+        f"Lütfen yanıtını 200 kelimenin altında tut ve kesinlikle Türkçe yaz."
     )
 
     try:
@@ -110,9 +110,9 @@ async def analyze_with_local_ai(log_content: str):
         # Cevabı akıllıca ikiye böl: analysis ve recommendation
         text = full_response.strip()
 
-        # Numaralı liste başlangıcını bul (1. veya 1) veya Step gibi kalıplar)
+        # Numaralı liste başlangıcını bul (1. veya 1) veya Adım, Çözüm gibi kalıplar)
         split_match = re.search(
-            r'\n\s*(?:1[\.\):]|Step\s*1|Solution|Fix|To fix|To resolve)',
+            r'\n\s*(?:1[\.\):]|Adım\s*1|Çözüm|ÇÖZÜM ADIMLARI|Solution|Fix)',
             text,
             re.IGNORECASE
         )
@@ -228,33 +228,37 @@ async def analyze_logs(request: LogRequest, db: Session = Depends(get_db)):
         print(f"Knowledge Base arama hatası: {e}")
 
     result = None
-    mode = "local-ai"
+    mode = "live"
 
-    # 2. Yerel AI (Ollama / phi3:mini)
-    result = await analyze_with_local_ai(request.log_content)
-
-    # 3. Yerel AI başarısız → Gemini
-    if not result and gemini_client:
-        mode = "live"
+    # 2. ÖNCE BULUT AI (Gemini)
+    if gemini_client:
         try:
             prompt = (
-                f"You are a Software Architect and Chaos Engineering expert.\n"
-                f"Analyze this log and provide a solution.\n\n"
+                f"Sen Node.js, TypeScript ve dağıtık sistemler konusunda uzman bir yazılım mimarısın.\n"
+                f"Aşağıdaki hata logunu analiz et ve TÜRKÇE bir çözüm sun.\n\n"
                 f"LOG: {request.log_content}\n\n"
-                f'Respond in JSON format: {{"analysis": "...", "recommendation": "..."}}'
+                f'Lütfen sadece şu JSON formatında yanıt ver: {{"analysis": "KÖK NEDEN ANALİZİ: [Açıklama]", "recommendation": "ÇÖZÜM ADIMLARI:\n1. [Adım 1]\n2. [Adım 2]"}}'
             )
             response = gemini_client.models.generate_content(model=MODEL_NAME, contents=prompt)
             clean = response.text.replace("```json", "").replace("```", "").strip()
             result = json.loads(clean)
         except Exception as e:
             print(f"Gemini Hatası: {e}")
+            result = None
 
-    # 4. Hepsi başarısız → Fallback
+    # 3. Gemini başarısız olursa (veya kota aşılırsa) → Yapay Zeka Simülasyonu (HIZLI)
     if not result:
         mode = "ai-simulated"
-        print("[Fallback] Yapay Zeka simülasyonu devrede. Cevap geciktiriliyor...")
-        await asyncio.sleep(2.5) # Yapay zeka düşünüyormuş hissi vermek için
+        print("[Fallback] Gemini kotası dolmuş veya hata almış. Yapay Zeka simülasyonu devrede...")
+        await asyncio.sleep(2.0) # Düşünme payı süsü
         result = get_fallback_analysis(request.log_content)
+
+    # 4. Hepsi başarısız → (Zaten simülasyon her koşulda bir şey döner)
+    if not result:
+        result = {
+            "analysis": "Sistem analiz edilemedi.",
+            "recommendation": "Sistem loglarını manuel kontrol edin."
+        }
 
     # 5. Veritabanına Kaydet
     try:
