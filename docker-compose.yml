@@ -47,14 +47,29 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-password123}
       - POSTGRES_DB=resiliengine_db
 
+<<<<<<< HEAD
+=======
   # Taha'nın eklediği Yerel AI Servisi (Ollama) - SCRUM-36/37'nin Kalbi
+>>>>>>> origin/feature/SCRUM-36
   local-ai:
     image: ollama/ollama:latest
     container_name: resiliengine_local_ai
     ports:
       - "11434:11434"
     volumes:
+<<<<<<< HEAD
+      - ./ollama_data:/root/.ollama
+    # Eğer NVIDIA ekran kartın varsa aşağıdaki bloğu aktif edebilirsin:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+=======
       - ollama_data:/root/.ollama
+>>>>>>> origin/feature/SCRUM-36
 
   frontend:
     build: ./frontend
