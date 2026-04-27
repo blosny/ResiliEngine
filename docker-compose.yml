@@ -23,12 +23,16 @@ services:
       - "3000:3000"
     depends_on:
       - db
+      - local-ai # Yerel AI hazır olmadan backend tam kapasite çalışmasın
     environment:
-      # Koda "db" ismine gitmesini söylüyoruz
-      DB_HOST: db
+      DB_HOST: db 
       DB_PASSWORD: ${DB_PASSWORD:-password123}
       DATABASE_URL: postgres://resiliengine_user:${DB_PASSWORD:-password123}@db:5432/resiliengine_db
+      # SCRUM-36/37 için gereken adresler:
+      LOCAL_AI_URL: http://local-ai:11434/api/generate
+      AI_SERVICE_URL: http://ai-service:8000/analyze
 
+  # Tunahan'ın AI Servisi (Gemini Köprüsü)
   ai-service:
     build:
       context: ./ai-service
@@ -43,12 +47,17 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-password123}
       - POSTGRES_DB=resiliengine_db
 
+<<<<<<< HEAD
+=======
+  # Taha'nın eklediği Yerel AI Servisi (Ollama) - SCRUM-36/37'nin Kalbi
+>>>>>>> origin/feature/SCRUM-36
   local-ai:
     image: ollama/ollama:latest
     container_name: resiliengine_local_ai
     ports:
       - "11434:11434"
     volumes:
+<<<<<<< HEAD
       - ./ollama_data:/root/.ollama
     # Eğer NVIDIA ekran kartın varsa aşağıdaki bloğu aktif edebilirsin:
     # deploy:
@@ -58,6 +67,9 @@ services:
     #         - driver: nvidia
     #           count: 1
     #           capabilities: [gpu]
+=======
+      - ollama_data:/root/.ollama
+>>>>>>> origin/feature/SCRUM-36
 
   frontend:
     build: ./frontend
@@ -71,3 +83,4 @@ services:
 
 volumes:
   postgres_data:
+  ollama_data: # Modellerin her seferinde silinmemesi için gerekli
