@@ -16,3 +16,7 @@ Thumbs.db
 
 # Docker
 docker/data/
+
+# Ollama AI Modelleri (GB boyutunda, repoya gönderilmez)
+# Modeli kullanmak için: docker exec -it resiliengine_local_ai ollama pull qwen2.5-coder:3b
+ollama_data/
