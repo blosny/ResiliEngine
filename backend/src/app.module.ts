@@ -31,20 +31,57 @@ import { Error401Strategy } from './infrastructure/strategies/error401.strategy'
 // Interceptor
 import { ChaosInterceptor } from './presentation/interceptors/chaos.interceptor';
 
+function parseBool(value: string | undefined) {
+  if (!value) return false;
+  return value === '1' || value.toLowerCase() === 'true' || value.toLowerCase() === 'yes';
+}
+
+function parseTriBool(value: string | undefined): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (value === '') return undefined;
+  return parseBool(value);
+}
+
 @Module({
   imports: [
     HttpModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: process.env.DATABASE_URL,
-      host: process.env.DB_HOST || 'db',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      username: process.env.DB_USER || 'resiliengine_user',
-      password: process.env.DB_PASSWORD || 'password123',
-      database: process.env.DB_NAME || 'resiliengine_db',
-      ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
-      entities: [User, ChaosLog],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      useFactory: () => {
+        const databaseUrl = process.env.DATABASE_URL;
+        const runningOnRender = !!process.env.RENDER;
+        const sslEnabled = parseTriBool(process.env.DB_SSL) ?? runningOnRender;
+        const ssl = sslEnabled
+          ? { rejectUnauthorized: parseBool(process.env.DB_SSL_REJECT_UNAUTHORIZED) }
+          : false;
+
+        const base = {
+          type: 'postgres' as const,
+          entities: [User, ChaosLog],
+          synchronize: true,
+        };
+
+        // Render gibi platformlarda genelde tek değişkenle (DATABASE_URL) bağlantı kurulur.
+        // `url` ile `host/port/user/pass` aynı anda verilirse yanlış/çakışan config oluşabiliyor.
+        if (databaseUrl) {
+          return {
+            ...base,
+            url: databaseUrl,
+            ssl,
+            extra: ssl ? { ssl } : undefined,
+          };
+        }
+
+        return {
+          ...base,
+          host: process.env.DB_HOST || 'db',
+          port: parseInt(process.env.DB_PORT || '5432', 10),
+          username: process.env.DB_USER || 'resiliengine_user',
+          password: process.env.DB_PASSWORD || 'password123',
+          database: process.env.DB_NAME || 'resiliengine_db',
+          ssl,
+          extra: ssl ? { ssl } : undefined,
+        };
+      },
     }),
     TypeOrmModule.forFeature([User, ChaosLog]),
   ],
