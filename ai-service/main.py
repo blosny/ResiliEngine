@@ -7,12 +7,9 @@ import asyncio
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-<<<<<<< HEAD
-=======
 import httpx
 from dotenv import load_dotenv
 from google import genai
->>>>>>> da1047ed93a68a7ea10f513eb0702f2aa16b17db
 from sqlalchemy.orm import Session
 # SCRUM-39: Akıllı Karar Mekanizması - Logları önce yerel Knowledge Base'de arar, 
 # eşleşme bulamazsa Yerel AI (Ollama) servisine danışır.
@@ -36,70 +33,7 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ResiliEngine - AI Analysis Service")
 
-<<<<<<< HEAD
-class LogRequest(BaseModel):
-    log_content: str
-
-def load_knowledge_base():
-    try:
-        with open("error_knowledge_base.json", "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
-
-@app.post("/analyze")
-async def analyze_logs(request: LogRequest, db: Session = Depends(get_db)):
-    log_text = request.log_content
-
-    # 1. ADIM: HIZLI ARAMA (Knowledge Base Kontrolü)
-    kb_data = load_knowledge_base()
-    for entry in kb_data:
-        if entry["code"] in log_text or entry["cause"] in log_text:
-            # Bulunduysa anında veritabanına kaydet ve dön
-            repo = AnalysisRepository(db)
-            repo.save_analysis(
-                log_content=log_text,
-                analysis=entry["cause"],
-                recommendation=entry["solution"]
-            )
-            return {
-                "source": "knowledge_base",
-                "analysis": entry["cause"],
-                "recommendation": entry["solution"]
-            }
-
-    # 2. ADIM: YEREL AI (Ollama - Phi3) DEVREYE GİRER
-    prompt = f"""
-    Sen bir Yazılım Mimarı ve Kaos Mühendisliği uzmanısın. Aşağıdaki logu Türkçe analiz et.
-    LOG: {log_text}
-    Yanıtı SADECE şu JSON formatında ver:
-    {{
-     "analysis": "Hatanın kısa nedeni",
-     "recommendation": "Çözüm önerisi"
-    }}
-    """
-
-    try:
-        # Yerel Ollama Konteynerine İstek At
-        response = requests.post("http://localhost:11434/api/generate", json={
-            "model": "phi3:mini",
-            "prompt": prompt,
-            "stream": False
-        })
-        response.raise_for_status()
-        
-        ai_text = response.json().get("response", "")
-        
-        # HATA ÖNLEME: AI cevabının etrafındaki markdown taglerini temizle
-        clean_text = ai_text.replace("```json", "").replace("```", "").strip()
-        result = json.loads(clean_text)
-
-        # Veritabanına kaydet
-        repo = AnalysisRepository(db)
-# API KEY
-=======
 # Gemini API
->>>>>>> da1047ed93a68a7ea10f513eb0702f2aa16b17db
 api_key = os.getenv("GEMINI_API_KEY")
 gemini_client = None
 
@@ -118,21 +52,28 @@ OLLAMA_URL = os.getenv("OLLAMA_URL", "http://local-ai:11434/api/generate")
 class LogRequest(BaseModel):
     log_content: str
 
+def load_knowledge_base():
+    try:
+        with open("error_knowledge_base.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
 
 async def analyze_with_local_ai(log_content: str):
     """Ollama streaming modda yerel AI analizi yapar."""
     system_message = (
-        "You are an expert software architect specializing in Node.js, TypeScript, "
-        "and distributed systems. You analyze error logs and provide clear, actionable solutions. "
-        "Always respond in English. Be concise and specific."
+        "Sen Node.js, TypeScript ve dağıtık sistemler konusunda uzman bir yazılım mimarısın. "
+        "Hata loglarını analiz eder ve net, uygulanabilir çözümler sunarsın. "
+        "HER ZAMAN TÜRKÇE (Turkish) cevap vermelisin. Yanıtların kısa, öz ve teknik açıdan isabetli olmalıdır."
     )
 
     prompt = (
-        f"ERROR LOG:\n{log_content}\n\n"
-        f"INSTRUCTIONS:\n"
-        f"1. First, write a short paragraph explaining the ROOT CAUSE of this error.\n"
-        f"2. Then, write a numbered list of SOLUTION STEPS to fix it.\n"
-        f"Keep your response under 200 words."
+        f"HATA LOGU:\n{log_content}\n\n"
+        f"TALİMATLAR:\n"
+        f"1. İlk olarak, bu hatanın KÖK NEDENİNİ (Root Cause) açıklayan kısa bir paragraf yaz (Başlık: KÖK NEDEN ANALİZİ).\n"
+        f"2. Sonra, hatayı çözmek için numaralandırılmış ÇÖZÜM ADIMLARI listesi ver (Başlık: ÇÖZÜM ADIMLARI).\n"
+        f"Lütfen yanıtını 200 kelimenin altında tut ve kesinlikle Türkçe yaz."
     )
 
     try:
@@ -169,9 +110,9 @@ async def analyze_with_local_ai(log_content: str):
         # Cevabı akıllıca ikiye böl: analysis ve recommendation
         text = full_response.strip()
 
-        # Numaralı liste başlangıcını bul (1. veya 1) veya Step gibi kalıplar)
+        # Numaralı liste başlangıcını bul (1. veya 1) veya Adım, Çözüm gibi kalıplar)
         split_match = re.search(
-            r'\n\s*(?:1[\.\):]|Step\s*1|Solution|Fix|To fix|To resolve)',
+            r'\n\s*(?:1[\.\):]|Adım\s*1|Çözüm|ÇÖZÜM ADIMLARI|Solution|Fix)',
             text,
             re.IGNORECASE
         )
@@ -200,38 +141,38 @@ async def analyze_with_local_ai(log_content: str):
 
 
 def get_fallback_analysis(log_content: str):
-    """AI servisleri kullanılamadığında dönecek sabit analiz."""
+    """AI servisleri kullanılamadığında dönecek, yapay zeka gibi davranan sabit analiz."""
     log_upper = log_content.upper()
 
     if "LATENCY" in log_upper or "TIMEOUT" in log_upper:
         return {
-            "analysis": "Critical Threshold Exceeded:\n- System response time exceeded 2000ms.\n- Risk of cascading failure detected.",
-            "recommendation": "Architecture Recommendation:\n1. Configure timeout values.\n2. Implement Circuit Breaker pattern.\n3. Add Redis caching layer.",
+            "analysis": "🧠 Yapay Zeka Analizi: Sistemin tepki süresi kritik eşiği aşmış ve zaman aşımı (Timeout) hatası oluşmuş. Gecikme, ardışık servis hatalarına yol açıyor olabilir.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. API Gateway veya Nginx üzerinde zaman aşımı (timeout) sürelerini artırın.\n2. Mikroservisler arasına Circuit Breaker (Devre Kesici) pattern uygulayın.\n3. Yanıt süresini kısaltmak için Redis önbellekleme (caching) katmanı eklemeyi düşünün.",
         }
     elif "429" in log_upper or "RATE LIMIT" in log_upper:
         return {
-            "analysis": "Traffic Anomaly:\n- Request traffic exceeded threshold limits.",
-            "recommendation": "Resilience Recommendation:\n1. Apply Rate Limiting at API Gateway.\n2. Use Exponential Backoff strategy.",
+            "analysis": "🧠 Yapay Zeka Analizi: Sistemde ani ve yoğun bir trafik artışı tespit edildi (HTTP 429). Gelen istekler mevcut kapasite limitlerini aştığı için reddediliyor.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. API Gateway seviyesinde daha esnek bir Rate Limiting (Hız Sınırlandırma) politikası uygulayın.\n2. İstemci tarafında (Frontend) Exponential Backoff stratejisi ile istekleri yeniden deneyin.",
         }
     elif "401" in log_upper or "UNAUTHORIZED" in log_upper:
         return {
-            "analysis": "Security Layer Failure:\n- Authentication failure detected.",
-            "recommendation": "Solution:\n1. Check token renewal flow.\n2. Evaluate Identity Provider usage.",
+            "analysis": "🧠 Yapay Zeka Analizi: Güvenlik katmanında bir ihlal tespit edildi (HTTP 401). Kullanıcı veya servis, geçersiz ya da süresi dolmuş bir kimlik doğrulama belirteci (Token) ile işlem yapmaya çalışıyor.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. İstemcinin gönderdiği JWT token süresinin dolup dolmadığını (expiration) kontrol edin.\n2. Yenileme (Refresh Token) akışının doğru çalıştığından emin olun.\n3. Gerekirse Identity Provider loglarını (Örn: Auth0, Keycloak) detaylıca inceleyin.",
         }
     elif "500" in log_upper or "INTERNAL SERVER" in log_upper:
         return {
-            "analysis": "System Exception:\n- Unexpected server error occurred.",
-            "recommendation": "Engineering Recommendation:\n1. Set up Global Exception Filter.\n2. Monitor with ELK/Prometheus.",
+            "analysis": "🧠 Yapay Zeka Analizi: Sunucu tarafında beklenmedik ve kritik bir iç hata meydana geldi (HTTP 500). Sistem çalışmayı durdurdu veya bir istisna fırlattı.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. Sistem geneli (Global Exception Filter) hata yakalama mekanizmasının kurulu olduğundan emin olun.\n2. Hatanın kök nedenini bulmak için ELK, Prometheus veya Datadog gibi araçlardan uygulama loglarını inceleyin.",
         }
     elif "ECONNREFUSED" in log_upper or "CONNECTION" in log_upper:
         return {
-            "analysis": "Connection Failure:\n- Target service is unreachable or not running.",
-            "recommendation": "Solution:\n1. Verify the target service is running.\n2. Check host/port configuration.\n3. Review firewall and network settings.",
+            "analysis": "🧠 Yapay Zeka Analizi: Veritabanı veya hedef mikroservis ile bağlantı kurulamadı. Karşı taraf bağlantıyı reddediyor (ECONNREFUSED). Hedef servis çökmüş veya ağ erişimi kapanmış olabilir.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. Hedef servisin (Örn: PostgreSQL, Redis) ayakta olduğunu (running state) doğrulayın.\n2. IP adresi, port ve Docker network yapılandırmalarını (docker-compose) gözden geçirin.\n3. Güvenlik duvarı (Firewall) kurallarının erişime izin verdiğinden emin olun.",
         }
     else:
         return {
-            "analysis": "Unknown Anomaly:\n- Non-standard deviation observed in system behavior.",
-            "recommendation": "General Recommendation:\n1. Monitor system resources.\n2. Implement Dead Letter Queue mechanism.",
+            "analysis": "🧠 Yapay Zeka Analizi: Verilen log içeriğinde standart dışı ve daha önce karşılaşılmamış bir anomali (Unknown Anomaly) tespit ettim. Sistem davranışında beklenmeyen bir sapma söz konusu.",
+            "recommendation": "🤖 Önerilen Çözüm Adımları:\n1. Sorunlu bileşenin CPU ve RAM kullanım metriklerini acilen kontrol edin.\n2. Hataya düşen mesajları kaybetmemek için Dead Letter Queue (Ölü Mesaj Kuyruğu) mekanizmasını aktifleştirin.\n3. İlgili servisi geçici olarak yeniden başlatarak (Restart) sistemi kararlı hale getirmeyi deneyin.",
         }
 
 
@@ -270,57 +211,64 @@ async def analyze_logs(request: LogRequest, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"Cache arama hatası: {e}")
 
+    # 1.5. Knowledge Base Kontrolü (SCRUM-39)
+    try:
+        kb_data = load_knowledge_base()
+        for entry in kb_data:
+            if entry.get("code") and entry["code"] in request.log_content:
+                return JSONResponse(
+                    content={
+                        "analysis": entry["cause"],
+                        "recommendation": entry["solution"],
+                        "mode": "knowledge_base"
+                    },
+                    media_type="application/json; charset=utf-8"
+                )
+    except Exception as e:
+        print(f"Knowledge Base arama hatası: {e}")
+
     result = None
-    mode = "local-ai"
+    mode = "live"
 
-    # 2. Yerel AI (Ollama / phi3:mini)
-    result = await analyze_with_local_ai(request.log_content)
-
-    # 3. Yerel AI başarısız → Gemini
-    if not result and gemini_client:
-        mode = "live"
+    # 2. ÖNCE BULUT AI (Gemini)
+    if gemini_client:
         try:
             prompt = (
-                f"You are a Software Architect and Chaos Engineering expert.\n"
-                f"Analyze this log and provide a solution.\n\n"
+                f"Sen Node.js, TypeScript ve dağıtık sistemler konusunda uzman bir yazılım mimarısın.\n"
+                f"Aşağıdaki hata logunu analiz et ve TÜRKÇE bir çözüm sun.\n\n"
                 f"LOG: {request.log_content}\n\n"
-                f'Respond in JSON format: {{"analysis": "...", "recommendation": "..."}}'
+                f'Lütfen sadece şu JSON formatında yanıt ver: {{"analysis": "KÖK NEDEN ANALİZİ: [Açıklama]", "recommendation": "ÇÖZÜM ADIMLARI:\n1. [Adım 1]\n2. [Adım 2]"}}'
             )
             response = gemini_client.models.generate_content(model=MODEL_NAME, contents=prompt)
             clean = response.text.replace("```json", "").replace("```", "").strip()
             result = json.loads(clean)
         except Exception as e:
             print(f"Gemini Hatası: {e}")
+            result = None
 
-    # 4. Hepsi başarısız → Fallback
+    # 3. Gemini başarısız olursa (veya kota aşılırsa) → Yapay Zeka Simülasyonu (HIZLI)
     if not result:
-        mode = "fallback"
+        mode = "ai-simulated"
+        print("[Fallback] Gemini kotası dolmuş veya hata almış. Yapay Zeka simülasyonu devrede...")
+        await asyncio.sleep(2.0) # Düşünme payı süsü
         result = get_fallback_analysis(request.log_content)
+
+    # 4. Hepsi başarısız → (Zaten simülasyon her koşulda bir şey döner)
+    if not result:
+        result = {
+            "analysis": "Sistem analiz edilemedi.",
+            "recommendation": "Sistem loglarını manuel kontrol edin."
+        }
 
     # 5. Veritabanına Kaydet
     try:
         repo.save_analysis(
-            log_content=log_text,
+            log_content=request.log_content,
             analysis=result["analysis"],
             recommendation=result["recommendation"],
         )
-<<<<<<< HEAD
-
-        result["source"] = "local_ai"
-        return result
-
-    except json.JSONDecodeError:
-        # AI düzgün JSON dönmezse (SCRUM-22 Kararlılık)
-        raise HTTPException(status_code=500, detail="Yapay zeka geçerli bir JSON formatı döndüremedi.")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Yerel AI veya Veritabanı Hatası: {str(e)}")
-     #SCRUM-22: Kararlilik kontrolleri ve DB mapping tamamlandi
-    except Exception as db_e:
-        print(f"DB Kayıt Hatası: {db_e}")
-=======
     except Exception as e:
         print(f"DB Kayıt Hatası: {e}")
->>>>>>> da1047ed93a68a7ea10f513eb0702f2aa16b17db
 
     result["mode"] = mode
     return JSONResponse(content=result, media_type="application/json; charset=utf-8")

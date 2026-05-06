@@ -50,15 +50,14 @@ graph TD
 ```
 
 ## Key Features
-
-- **Dinamik Hata Enjeksiyonu (Strategy Pattern):** Sistem çalışma esnasında dinamik olarak farklı hata stratejilerini (`LatencyInjection`, `ServiceCrash`, `DatabaseTimeout`) seçip uygulayabilmeyi sağlayan esnek mimari.
-- **Yapay Zeka Destekli Kök Neden Analizi (Root Cause Analysis):** Sisteme enjekte edilen hataların oluşturduğu logları `Gemini AI` ile analiz edip otomatik raporlar ve kod bazlı çözüm yolları üretilmesi.
-- **Bulut Tabanlı Dağıtık Mimari:** Mikroservis mimarisine uygun olarak, frontend, backend ve AI servisinin bağımsız konteynerlar (Docker) üzerinden birbiriyle entegre çalıştığı modern bulut yaklaşımı.
+- **Gerçek Zamanlı Terminal Ajanı (`guard.js`):** Yazılımcıların terminal akışlarını izleyen, bir hata (`Error`, `Exception` vb.) yakaladığı anda anında sunucuya raporlayan Node.js tabanlı canlı izleme hook'u.
+- **Dinamik Hata Enjeksiyonu (Strategy Pattern):** Sistemlerin dayanıklılığını ölçmek amacıyla `Latency`, `429`, `401` ve `500` hataları fırlatabilen kaos enjeksiyon motoru.
+- **Çok Katmanlı Yapay Zekâ Analiz Hattı:**
+  1. **Hafıza (DB Cache):** Daha önce analiz edilmiş hatalar anında çekilir.
+  2. **Bulut Yapay Zekâ (Gemini):** Güncel ve gelişmiş model desteği.
+  3. **Simüle Edilmiş Güvenlik Ağı (Fallback):** Yapay zekanın erişilemez olduğu veya kota sınırlarının dolduğu durumlarda devreye giren zenginleştirilmiş DevOps asistanı.
 
 ## Deployment Links
-
-Yayınlanan mikroservis ve bileşenlerimizin canlı ortam bağlantıları aşağıdadır (Render üzerinden host edilmektedir):
-
 | Servis / Bileşen  | Teknoloji          | Canlı Link (Render)                                                              |  Durum   |
 | :---------------- | :----------------- | :------------------------------------------------------------------------------- | :------: |
 | **Frontend (UI)** | React / Vite       | [resiliengine-frontend.onrender.com](https://resiliengine-frontend.onrender.com) | 🟢 Aktif |
@@ -66,27 +65,32 @@ Yayınlanan mikroservis ve bileşenlerimizin canlı ortam bağlantıları aşağ
 | **AI Service**    | Python / FastAPI   | [resiliengine-ai.onrender.com](https://resiliengine-ai.onrender.com)             | 🟢 Aktif |
 | **Database**      | Managed PostgreSQL | _[Dış erişime kapalı, iç ağda]_                                                  | 🟢 Aktif |
 
-> _Not: Proje ortamları hazırlandıkça linkler test edilebilir hale gelecektir._
+## How to Run & Presentation Guide (Sunum Senaryosu)
 
-## How to Run (Local)
+### Adım 1: Docker Konteynerlarını Başlatma
+Sunumu yapmadan önce tüm mikroservis mimarisini ayağa kaldırmak için terminalde çalıştırın:
+```bash
+docker-compose up -d
+```
+*Not: Sistem Docker üzerinden `frontend (port 5173)`, `backend (port 3000)`, `ai-service (port 8000)`, `local-ai (Ollama)` ve PostgreSQL veritabanını izole şekilde yönetir.*
 
-Projeyi kendi bilgisayarınızda (lokal ortamda) tüm bileşenleriyle tek tuşla çalıştırmak için **Docker** kullanıyoruz.
+### Adım 2: Canlı Takip Ekranını Açma
+Tarayıcınızı açarak aşağıdaki adrese gidin:
+**http://localhost:5173**
 
-1. Projeyi sisteminize indirin:
+Ekranda yeşil renkle yanıp sönen **"Aktif İzleme Devrede (Guard.js Dinleniyor...)"** panelini sunum katılımcılarına gösterin.
 
-   ```bash
-   git clone <repo-url>
-   cd ResiliEngine
-   ```
+### Adım 3: Gerçek Zamanlı Hata Yakalama (Canlı Demo)
+Sunum esnasında bir yazılımcının sistemde beklenmedik bir hata yaptığını simüle etmek için terminalinizde şu komutlardan birini çalıştırın:
 
-2. Ortam değişkenlerini (Env) ayarlayın:
-   Ana dizinde yer alan `.env` dosyasının doğru yapılandırıldığından emin olun (örn. `GEMINI_API_KEY` vb.).
+- **Senaryo 1 (Veritabanı Çökmesi):**
+  ```bash
+  node guard.js "echo [ERROR] Fatal: Database deadlocked in /src/database.ts"
+  ```
+- **Senaryo 2 (Yetkilendirme Hatası):**
+  ```bash
+  node guard.js "echo [ERROR] Unauthorized: Invalid JWT Signature in /src/auth.ts"
+  ```
 
-3. Konteynerları ayağa kaldırın:
-   Tüm servisleri inşa edip başlatmak için aşağıdaki komutu çalıştırın:
-   ```bash
-   docker-compose up --build
-   ```
+*Komut çalıştıktan 2-3 saniye sonra tarayıcıyı yenilemeden, Dashboard ekranına anında hatanın düştüğünü ve Yapay Zeka'nın Türkçe bir dille mimari çözüm ürettiğini sunabilirsiniz.*
 
-> **`docker-compose up --build` nedir?**
-> Bu komut, projeyi çalıştırmak için gerekli olan `docker-compose.yml` dosyasını okur. İçerisinde tanımlı olan tüm servislerin (Frontend, Backend, AI Service, PostgreSQL veritabanı) imajlarını proje dosyalarından sıfırdan oluşturur (build aşaması). Ardından bu sanal konteynerların kendi aralarında iletişim kurabileceği ağ yapılandırmalarını (network) otomatik olarak kurup hepsini senkronize bir şekilde çalıştırır (up aşaması). Her sistemi tek tek bilgisayarına kurmak yerine bu komut sayesinde izole ve eksiksiz bir ortam elde edersin.
